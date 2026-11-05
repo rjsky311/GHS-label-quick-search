@@ -45,8 +45,11 @@ The best path is a label workflow that a lab user can print without guessing:
   container front labels then say "Includes solvent hazards". A non-water
   solvent that cannot be confirmed prints "Solvent hazards not included" on
   those labels and in the preview. QR and identification small labels carry
-  the merged pictograms but, per their content rules, no solvent text. There
-  is no mixture threshold calculation.
+  the merged pictograms, the concentration and solvent, and, when the solvent
+  could not be confirmed, the "not included" warning; they carry no other
+  solvent text. There is no mixture threshold calculation. A parent with no
+  hazard data of its own takes no solvent hazards and stays blocked from
+  printing, the same as without a solvent.
 - The public print modal exposes exactly three first-level outputs: Complete
   A4/Letter label, QR small label, and Identification small label.
 - A complete primary label includes product identifier, CAS, signal word, all
@@ -178,6 +181,10 @@ Run these in Browser Use after meaningful print-workflow changes:
 - Identification small label: CAS, English name, Chinese name, and every
   pictogram remain visible across the continuation set; no QR, H/P text, or
   signal word is printed.
+- Prepared solution on a QR or identification small label: the concentration
+  and solvent are printed under the names, so it cannot be read as the pure
+  chemical. A solvent that could not be confirmed adds "Solvent hazards not
+  included".
 - Small-label continuation: the print action and summary report the actual
   physical output label count, not just the source chemical count.
 - Black-and-white mode: pictograms and QR are grayscale in preview.

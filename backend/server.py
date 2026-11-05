@@ -1054,7 +1054,8 @@ def resolve_name_to_cas(query: str) -> Optional[str]:
     Returns the first matching CAS number, or None.
     Priority: manual exact formal name → seed exact formal name →
               approved exact alias → compact exact match →
-              word-boundary English → unique prefix English → unique prefix Chinese
+              a dictionary name's parenthetical synonym.
+    A partial match never resolves: it would silently return another compound.
     """
     q = query.strip()
     if not q:
@@ -1099,41 +1100,60 @@ def resolve_name_to_cas(query: str) -> Optional[str]:
     en_lookup = index.combined_exact["en"]
     zh_lookup = index.combined_exact["zh"]
 
-    # Try English names containing the query as a word boundary match
-    # e.g., "Methanol" matches "Methyl alcohol (Methanol)"
-    en_contains = []
-    for name, cas in en_lookup.items():
-        # Check if query appears as a word (bounded by space, parens, or start/end)
-        if re.search(r'(?:^|[\s(])' + re.escape(q_lower) + r'(?:$|[\s)])', name):
-            normalized = _normalize_valid_lookup_cas(cas)
-            if normalized:
-                en_contains.append(normalized)
-    if len(en_contains) == 1:
-        return en_contains[0]
-
-    # Try partial match (prefix) — English (case-insensitive)
-    en_prefix = [
-        normalized
-        for name, cas in en_lookup.items()
-        if name.startswith(q_lower)
-        for normalized in [_normalize_valid_lookup_cas(cas)]
-        if normalized
-    ]
-    if len(en_prefix) == 1:
-        return en_prefix[0]
-
-    # Try partial match (prefix) — Chinese
-    zh_prefix = [
-        normalized
-        for name, cas in zh_lookup.items()
-        if name.startswith(q)
-        for normalized in [_normalize_valid_lookup_cas(cas)]
-        if normalized
-    ]
-    if len(zh_prefix) == 1:
-        return zh_prefix[0]
+    # A dictionary name may carry a synonym in parentheses, so "methanol" reaches
+    # "Methyl alcohol (Methanol)". Only a whole name counts: a word or prefix inside
+    # a longer name is a different compound (HCl in "Tris HCl"), so those appear in
+    # the autocomplete list and never resolve on their own.
+    for lookup, key in ((en_lookup, q_lower), (zh_lookup, q)):
+        hits = {
+            normalized
+            for name, cas in lookup.items()
+            if key in _name_and_synonym(name)
+            for normalized in [_normalize_valid_lookup_cas(cas)]
+            if normalized
+        }
+        if len(hits) == 1:
+            return hits.pop()
 
     return None
+
+
+# Parentheses in the dictionary that describe a form or a use. "Mercuric oxide
+# (Red)" is not what someone searching "red" wants.
+_NON_SYNONYM_PARENTHESES = frozenset(
+    {
+        "anhydrous",
+        "dssc材料",
+        "glacial",
+        "metal",
+        "mixed isomers",
+        "oled材料",
+        "red",
+        "shot/pellets",
+        "乾燥劑",
+        "冠醚",
+        "無水",
+        "混合物",
+        "混合異構物",
+        "紅",
+        "緩衝液",
+        "配體",
+        "金屬",
+    }
+)
+
+
+def _name_and_synonym(name: str) -> set[str]:
+    """A dictionary name and, when it ends in one, its parenthetical synonym."""
+    # The space matters: "Poly(ethylene)" is one name, not ethylene's synonym.
+    match = re.fullmatch(r"(.+?)(?:\s+\(|\s*（)([^()（）]+)[)）]", name)
+    if not match:
+        return {name}
+    parts = {name, match.group(1)}
+    inner = match.group(2)
+    if inner.lower() not in _NON_SYNONYM_PARENTHESES and not inner.startswith("註"):
+        parts.add(inner)
+    return parts
 
 
 def _classification_signature(report: Dict[str, Any]) -> tuple:

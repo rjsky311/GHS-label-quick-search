@@ -1,4 +1,5 @@
 import { resolvePrintLayoutConfig } from "@/constants/labelStocks";
+import { buildPreparedSolutionItem } from "../preparedSolution";
 import {
   PRINT_OUTPUT_KIND,
   PRINT_OUTPUT_PLAN_STATE,
@@ -470,5 +471,46 @@ describe("printOutputPlanner", () => {
     expect(plan.issues).toEqual([
       expect.objectContaining({ type: "ghs-text-no-pictograms" }),
     ]);
+  });
+});
+
+describe("a prepared solution of a parent with no hazard data", () => {
+  const parent = {
+    cas_number: "7732-18-5",
+    name_en: "Compound Y",
+    found: true,
+    ghs_pictograms: [],
+    hazard_statements: [],
+    precautionary_statements: [],
+  };
+  const methanol = {
+    cas_number: "67-56-1",
+    name_en: "Methanol",
+    found: true,
+    ghs_pictograms: [{ code: "GHS02" }, { code: "GHS06" }],
+    hazard_statements: [{ code: "H225" }, { code: "H301" }],
+    signal_word: "Danger",
+  };
+  const OUTPUTS = [
+    ["complete", { labelPurpose: "shipping", template: "full", stockPreset: "a4-primary" }],
+    ["container front", { labelPurpose: "shipping", template: "standard", stockPreset: "medium-bottle" }],
+    ["quick ID", { labelPurpose: "quickId", template: "icon", stockPreset: "small-strip" }],
+    ["QR", { labelPurpose: "qrSupplement", template: "qrcode", stockPreset: "brother-62mm-continuous" }],
+  ];
+
+  it.each(OUTPUTS)("%s: cannot print once a solvent is added", (_label, config) => {
+    const item = buildPreparedSolutionItem(
+      parent,
+      { concentration: "10 mM", solvent: "Methanol" },
+      { solventResult: methanol },
+    );
+    const plan = buildPrintOutputPlan({
+      selectedForLabel: [item],
+      layout: resolvePrintLayoutConfig(config),
+      resolvedLabProfile: completeProfile,
+      locale: "en-US",
+    });
+    expect(plan.state).toBe(PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA);
+    expect(plan.canPrint).toBe(false);
   });
 });

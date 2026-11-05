@@ -17,7 +17,7 @@ P_CODE_TRANSLATIONS: dict[str, str] = {
     # ─── General (P100 series) ────────────────────────────────────────────────
     "P101": "如就醫，攜帶產品容器或標示。",
     "P102": "置於孩童無法取得之處。",
-    "P103": "使用前閱讀標示。",
+    "P103": "仔細閱讀並遵循所有指示。",
 
     # ─── Prevention (P200 series) ─────────────────────────────────────────────
     "P201": "使用前取得特殊指示。",
@@ -25,7 +25,7 @@ P_CODE_TRANSLATIONS: dict[str, str] = {
     "P203": "使用前取得、閱讀並遵循所有安全指示。",
     "P210": "遠離熱源、熱表面、火花、明火及其他點火源。禁止吸煙。",
     "P211": "勿對火焰或其他點火源噴灑。",
-    "P212": "避免密閉加熱，避免減少衝擊或摩擦。",
+    "P212": "避免在密閉狀態下加熱或減少減敏劑。",
     "P220": "遠離衣物及其他可燃性材料。",
     "P221": "採取預防措施，防止與可燃性物質混合。",
     "P222": "切勿接觸空氣。",
@@ -48,7 +48,7 @@ P_CODE_TRANSLATIONS: dict[str, str] = {
     "P262": "避免接觸眼睛、皮膚或衣物。",
     "P263": "懷孕期間及哺乳期間避免接觸。",
     "P264": "操作後徹底清洗雙手。",
-    "P265": "操作後徹底清洗接觸部位。",
+    "P265": "勿觸摸眼睛。",
     "P270": "使用本品時勿飲食或吸煙。",
     "P271": "僅於室外或通風良好處使用。",
     "P272": "受污染的工作服不得帶出工作場所。",
@@ -66,7 +66,7 @@ P_CODE_TRANSLATIONS: dict[str, str] = {
     "P303": "若皮膚（或頭髮）接觸：",
     "P304": "若吸入：",
     "P305": "若眼睛接觸：",
-    "P306": "若皮膚或頭髮接觸後：立即以大量水清洗所有受污染的衣物。",
+    "P306": "若沾到衣物：",
     "P307": "若接觸：",
     "P308": "若曾接觸或有疑慮：",
     "P310": "立即聯絡中毒控制中心或醫師。",
@@ -76,20 +76,20 @@ P_CODE_TRANSLATIONS: dict[str, str] = {
     "P314": "若感到不適，諮詢醫師。",
     "P315": "立即諮詢醫師。",
     "P316": "立即取得緊急醫療協助。",
-    "P317": "立即諮詢醫師。",
+    "P317": "尋求醫療協助。",
     "P318": "若曾接觸或有疑慮，請諮詢醫師。",
     "P319": "若感到不適，尋求醫療協助。",
     "P320": "需要立即進行特定治療（見本標示上的……）。",
     "P321": "需要進行特定治療（見本標示上的……）。",
-    "P322": "需要進行特定措施（見本標示上的……）。",
+    "P322": "需緊急進行特定治療（見安全資料表）。",
     "P330": "漱口。",
     "P331": "請勿催吐。",
-    "P332": "若皮膚過敏：",
-    "P333": "若皮膚過敏或出現皮疹：",
+    "P332": "如發生皮膚刺激：",
+    "P333": "如發生皮膚刺激或皮疹：",
     "P334": "浸入冷水中或以濕繃帶包紮。",
     "P335": "用刷子輕輕拂去皮膚上的粒子。",
     "P336": "以溫水解凍已凍傷的部位，切勿摩擦受影響的部位。",
-    "P337": "若眼睛不適持續：",
+    "P337": "若眼睛刺激持續：",
     "P338": "如配戴隱形眼鏡且可輕易取出，請取出隱形眼鏡，繼續沖洗。",
     "P340": "將患者移至空氣新鮮處，保持呼吸舒適的姿勢休息。",
     "P341": "若呼吸困難，將患者移至空氣新鮮處，保持呼吸舒適的姿勢休息。",
@@ -99,7 +99,7 @@ P_CODE_TRANSLATIONS: dict[str, str] = {
     "P352": "以大量肥皂和清水清洗。",
     "P353": "以水沖洗皮膚（沐浴）。",
     "P354": "立即以水沖洗數分鐘。",
-    "P360": "在就醫前立即以大量清水沖洗受污染的衣物和皮膚。",
+    "P360": "脫除衣物前，立即以大量清水沖洗受污染的衣物和皮膚。",
     "P361": "立即脫除所有受污染的衣物。",
     "P362": "脫除受污染的衣物。",
     "P363": "清洗後，受污染的衣物在重新使用前應先清洗。",
@@ -130,7 +130,7 @@ P_CODE_TRANSLATIONS: dict[str, str] = {
     "P411": "儲存於不超過……°C的溫度。",
     "P412": "不得暴露於超過50°C的溫度。",
     "P413": "以……kg以上的大量儲存時，儲存於不超過……°C的溫度。",
-    "P420": "遠離其他材料分開存放。",
+    "P420": "分開存放。",
     "P422": "在……中儲存。",
 
     # ─── Disposal (P500 series) ───────────────────────────────────────────────
@@ -140,7 +140,7 @@ P_CODE_TRANSLATIONS: dict[str, str] = {
     # ─── Common combined codes ────────────────────────────────────────────────
 
     # P264 + P265
-    "P264+P265": "操作後徹底清洗所有接觸部位。",
+    "P264+P265": "操作後徹底清洗雙手。勿觸摸眼睛。",
 
     # P301 combinations
     "P301+P316":      "若吞食：立即取得緊急醫療協助。",
@@ -171,7 +171,7 @@ P_CODE_TRANSLATIONS: dict[str, str] = {
     "P305+P351+P338": "若眼睛接觸：以清水小心沖洗數分鐘。如配戴隱形眼鏡且可輕易取出，請取出隱形眼鏡，繼續沖洗。",
 
     # P306 combinations
-    "P306+P360":      "若皮膚或頭髮接觸後：在就醫前立即以大量清水沖洗受污染的衣物和皮膚。",
+    "P306+P360":      "若沾到衣物：脫除衣物前，立即以大量清水沖洗受污染的衣物和皮膚。",
 
     # P307+P311
     "P307+P311":      "若接觸：聯絡中毒控制中心或醫師。",
@@ -182,12 +182,12 @@ P_CODE_TRANSLATIONS: dict[str, str] = {
     "P308+P313":      "若曾接觸或有疑慮：諮詢醫師。",
 
     # P332 combinations
-    "P332+P313":      "若皮膚過敏：諮詢醫師。",
-    "P332+P317":      "若皮膚刺激發生：尋求醫療協助。",
+    "P332+P313":      "如發生皮膚刺激：諮詢醫師。",
+    "P332+P317":      "如發生皮膚刺激：尋求醫療協助。",
 
     # P333 combinations
-    "P333+P313":      "若皮膚過敏或出現皮疹：諮詢醫師。",
-    "P333+P317":      "若皮膚刺激或皮疹發生：尋求醫療協助。",
+    "P333+P313":      "如發生皮膚刺激或皮疹：諮詢醫師。",
+    "P333+P317":      "如發生皮膚刺激或皮疹：尋求醫療協助。",
 
     # P335+P334
     "P335+P334":      "用刷子輕輕拂去皮膚上的粒子，浸入冷水中或以濕繃帶包紮。",
@@ -196,8 +196,8 @@ P_CODE_TRANSLATIONS: dict[str, str] = {
     "P336+P317":      "立即以溫水解凍已凍傷的部位，切勿摩擦受影響的部位，並尋求醫療協助。",
 
     # P337 combinations
-    "P337+P313":      "若眼睛不適持續：諮詢醫師。",
-    "P337+P317":      "若眼睛不適持續：立即諮詢醫師。",
+    "P337+P313":      "若眼睛刺激持續：諮詢醫師。",
+    "P337+P317":      "若眼睛刺激持續：尋求醫療協助。",
 
     # P342 combinations
     "P342+P316":      "若出現呼吸道症狀：立即取得緊急醫療協助。",
@@ -226,6 +226,18 @@ P_CODE_TRANSLATIONS: dict[str, str] = {
     "P410+P403":      "防止陽光照射，儲存於通風良好處。",
     "P410+P412":      "防止陽光照射，不得暴露於超過50°C的溫度。",
 
+    # Codes on the current PubChem list that were missing here
+    "P236": "僅保存於原包裝；運輸配置下的項別……",
+    "P309": "若接觸或感到不適：",
+    "P323": "需要進行特定措施（見安全資料表）。",
+    "P503": "有關處置、回收或再利用資訊，請洽製造商或供應商。",
+    "P231+P232": "在惰性氣體中操作及儲存，防止受潮。",
+    "P235+P410": "保持低溫，防止陽光照射。",
+    "P302+P335+P334": "若皮膚接觸：撥除皮膚上的鬆散顆粒，浸入冷水中或以濕繃帶包裹。",
+    "P309+P311": "若接觸或感到不適：聯絡中毒控制中心或醫師。",
+    "P370+P372+P380+P373": "火災時：有爆炸危險，疏散區域，火勢波及爆炸物時切勿滅火。",
+    "P402+P404": "儲存於乾燥處及密閉容器中。",
+    "P411+P235": "儲存於不超過……°C的溫度，保持低溫。",
 }
 
 # ─── English P-code texts (UN GHS Rev.8 / Rev.10 / Rev.11) ───────────────────
@@ -235,7 +247,7 @@ P_CODE_TEXTS_EN: dict[str, str] = {
     # ─── General (P100 series) ────────────────────────────────────────────────
     "P101": "If medical advice is needed, have product container or label at hand.",
     "P102": "Keep out of reach of children.",
-    "P103": "Read label before use.",
+    "P103": "Read carefully and follow all instructions.",
 
     # ─── Prevention (P200 series) ─────────────────────────────────────────────
     "P201": "Obtain special instructions before use.",
@@ -243,7 +255,7 @@ P_CODE_TEXTS_EN: dict[str, str] = {
     "P203": "Obtain, read and follow all safety instructions before use.",
     "P210": "Keep away from heat, hot surfaces, sparks, open flames and other ignition sources. No smoking.",
     "P211": "Do not spray on an open flame or other ignition source.",
-    "P212": "Avoid heating under confinement or reduction of the headspace.",
+    "P212": "Avoid heating under confinement or reduction of the desensitized agent.",
     "P220": "Keep away from clothing and other combustible materials.",
     "P221": "Take precautionary measures against mixing with combustibles.",
     "P222": "Do not allow contact with air.",
@@ -257,7 +269,7 @@ P_CODE_TEXTS_EN: dict[str, str] = {
     "P240": "Ground and bond container and receiving equipment.",
     "P241": "Use explosion-proof electrical, ventilating, lighting and other equipment.",
     "P242": "Use non-sparking tools.",
-    "P243": "Take action to prevent static discharges.",
+    "P243": "Take precautionary measures against static discharge.",
     "P244": "Keep valves and fittings free from oil and grease.",
     "P250": "Do not subject to grinding, shock, friction.",
     "P251": "Do not pierce, burn, or incinerate, even after use.",
@@ -266,7 +278,7 @@ P_CODE_TEXTS_EN: dict[str, str] = {
     "P262": "Do not get in eyes, on skin, or on clothing.",
     "P263": "Avoid contact during pregnancy and while nursing.",
     "P264": "Wash hands thoroughly after handling.",
-    "P265": "Wash affected body parts thoroughly after handling.",
+    "P265": "Do not touch eyes.",
     "P270": "Do not eat, drink or smoke when using this product.",
     "P271": "Use only outdoors or in a well-ventilated area.",
     "P272": "Contaminated work clothing should not be allowed out of the workplace.",
@@ -284,7 +296,7 @@ P_CODE_TEXTS_EN: dict[str, str] = {
     "P303": "IF ON SKIN (or hair):",
     "P304": "IF INHALED:",
     "P305": "IF IN EYES:",
-    "P306": "IF ON SKIN OR HAIR: Immediately rinse contaminated clothing and skin with water.",
+    "P306": "IF ON CLOTHING:",
     "P307": "IF exposed:",
     "P308": "IF exposed or concerned:",
     "P310": "Immediately call a POISON CENTER or doctor.",
@@ -294,12 +306,12 @@ P_CODE_TEXTS_EN: dict[str, str] = {
     "P314": "Get medical advice if you feel unwell.",
     "P315": "Get immediate medical advice.",
     "P316": "Get emergency medical help immediately.",
-    "P317": "Get emergency medical help.",
+    "P317": "Get medical help.",
     "P318": "If exposed or concerned, get medical advice.",
     "P319": "Get medical help if you feel unwell.",
     "P320": "Specific treatment is urgent (see ... on this label).",
     "P321": "Specific treatment (see ... on this label).",
-    "P322": "Specific measures (see ... on this label).",
+    "P322": "Specific treatment is urgent (see information on the safety data sheet).",
     "P330": "Rinse mouth.",
     "P331": "Do NOT induce vomiting.",
     "P332": "If skin irritation occurs:",
@@ -348,7 +360,7 @@ P_CODE_TEXTS_EN: dict[str, str] = {
     "P411": "Store at temperatures not exceeding ... °C.",
     "P412": "Do not expose to temperatures exceeding 50 °C.",
     "P413": "Store bulk masses greater than ... kg at temperatures not exceeding ... °C.",
-    "P420": "Store away from other materials.",
+    "P420": "Store separately.",
     "P422": "Store contents under ...",
 
     # ─── Disposal (P500 series) ───────────────────────────────────────────────
@@ -358,7 +370,7 @@ P_CODE_TEXTS_EN: dict[str, str] = {
     # ─── Common combined codes ────────────────────────────────────────────────
 
     # P264 + P265
-    "P264+P265": "Wash all exposed body parts thoroughly after handling.",
+    "P264+P265": "Wash hands thoroughly after handling. Do not touch eyes.",
 
     # P301 combinations
     "P301+P316":      "IF SWALLOWED: Get emergency medical help immediately.",
@@ -389,7 +401,7 @@ P_CODE_TEXTS_EN: dict[str, str] = {
     "P305+P351+P338": "IF IN EYES: Rinse cautiously with water for several minutes. Remove contact lenses, if present and easy to do. Continue rinsing.",
 
     # P306 combinations
-    "P306+P360":      "IF ON SKIN OR HAIR: Rinse immediately contaminated clothing and skin with plenty of water before removing clothes.",
+    "P306+P360":      "IF ON CLOTHING: Rinse immediately contaminated clothing and skin with plenty of water before removing clothes.",
 
     # P307+P311
     "P307+P311":      "IF exposed: Call a POISON CENTER or doctor.",
@@ -415,7 +427,7 @@ P_CODE_TEXTS_EN: dict[str, str] = {
 
     # P337 combinations
     "P337+P313":      "If eye irritation persists: Get medical advice.",
-    "P337+P317":      "If eye irritation persists: Get emergency medical help.",
+    "P337+P317":      "If eye irritation persists: Get medical help.",
 
     # P342 combinations
     "P342+P316":      "If experiencing respiratory symptoms: Get emergency medical help immediately.",
@@ -444,4 +456,16 @@ P_CODE_TEXTS_EN: dict[str, str] = {
     "P410+P403":      "Protect from sunlight. Store in a well-ventilated place.",
     "P410+P412":      "Protect from sunlight. Do not expose to temperatures exceeding 50 °C.",
 
+    # Codes on the current PubChem list that were missing here
+    "P236": "Keep only in original packaging; Division ... in the transport configuration.",
+    "P309": "IF exposed or if you feel unwell:",
+    "P323": "Specific measures (see information on the safety data sheet).",
+    "P503": "Refer to manufacturer/supplier for information on disposal/recovery/recycling.",
+    "P231+P232": "Handle and store contents under inert gas. Protect from moisture.",
+    "P235+P410": "Keep cool. Protect from sunlight.",
+    "P302+P335+P334": "IF ON SKIN: Brush off loose particles from skin. Immerse in cool water or wrap in wet bandages.",
+    "P309+P311": "IF exposed or if you feel unwell: Call a POISON CENTER or doctor.",
+    "P370+P372+P380+P373": "In case of fire: Explosion risk. Evacuate area. DO NOT fight fire when fire reaches explosives.",
+    "P402+P404": "Store in a dry place. Store in a closed container.",
+    "P411+P235": "Store at temperatures not exceeding ... °C. Keep cool.",
 }

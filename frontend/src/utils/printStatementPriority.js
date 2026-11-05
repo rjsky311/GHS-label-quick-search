@@ -38,13 +38,13 @@ export const HAZARD_PRIORITY_TIER = Object.freeze({
   OTHER: 10,
 });
 
-// Explosives, self-reactive/organic-peroxide type A/B, pyrophoric and
-// water-reactive solids/liquids, acute fatal/toxic, aspiration, corrosive and
+// Explosives, gases that can react explosively without air, self-reactive/
+// organic-peroxide type A/B, pyrophoric and water-reactive solids/liquids, acute fatal/toxic, aspiration, corrosive and
 // serious eye damage, category-1 CMR, STOT category 1, and respiratory
 // sensitisation.
 const SEVERE_HAZARD_CODES = new Set([
-  200, 201, 202, 203, 204, 205, 240, 241, 250, 260, 261, 300, 301, 304, 310,
-  311, 314, 318, 330, 331, 334, 340, 350, 360, 370, 372,
+  200, 201, 202, 203, 204, 205, 230, 231, 232, 240, 241, 250, 260, 261, 300,
+  301, 304, 310, 311, 314, 318, 330, 331, 334, 340, 350, 360, 370, 372,
 ]);
 
 // Suspected (category 2) CMR, lactation effects, and STOT category 2.
@@ -54,8 +54,8 @@ const SUSPECTED_CHRONIC_HAZARD_CODES = new Set([341, 351, 361, 362, 371, 373]);
 // unstable gases, self-reactive/peroxide types C-G, self-heating, oxidisers,
 // and flammable chemicals under pressure.
 const PHYSICAL_HAZARD_CODES = new Set([
-  206, 207, 208, 209, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230,
-  231, 232, 242, 251, 252, 270, 271, 272, 282, 283,
+  206, 207, 208, 209, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 242,
+  251, 252, 270, 271, 272, 282, 283,
 ]);
 
 const PRESSURE_OR_METAL_CORROSION_CODES = new Set([280, 281, 284, 290]);
@@ -63,7 +63,7 @@ const PRESSURE_OR_METAL_CORROSION_CODES = new Set([280, 281, 284, 290]);
 // Irritation, skin sensitisation, drowsiness/dizziness, acute toxicity
 // categories 4 and 5, aspiration category 2, and mild skin or eye irritation.
 const IRRITANT_OR_HARMFUL_CODES = new Set([
-  302, 303, 305, 312, 313, 315, 316, 317, 319, 320, 332, 333, 335, 336, 337,
+  302, 303, 305, 312, 313, 315, 316, 317, 319, 320, 332, 333, 335, 336,
 ]);
 
 // Aquatic and ozone hazards. They rank below health hazards but stay ahead of
@@ -92,10 +92,13 @@ const scoreHazardCode = (code) => {
   return HAZARD_PRIORITY_TIER.OTHER;
 };
 
-// P201/P202 (obtain special instructions before use) and P210 (keep away from
-// heat, sparks, open flames) join the leading prevention statements.
+// P201/P202 (obtain special instructions before use), P210 and P220-P223
+// (keep away from ignition sources, combustibles and water), P231/P232 (inert
+// gas, moisture), P262 (no contact at all) and P282-P284 (cryogenic and
+// respiratory protection) join the leading prevention statements.
 const LEADING_PREVENTION_CODES = new Set([
-  201, 202, 210, 260, 261, 264, 271, 280, 284,
+  201, 202, 210, 220, 221, 222, 223, 231, 232, 260, 261, 262, 264, 271, 280,
+  282, 283, 284,
 ]);
 
 const LEADING_RESPONSE_CODES = new Set([

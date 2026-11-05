@@ -328,3 +328,73 @@ describe("prepared solution: solvent that cannot be confirmed", () => {
     ).toBe("water");
   });
 });
+
+describe("a parent with no hazard data of its own", () => {
+  const noDataParent = Object.freeze({
+    cas_number: "7732-18-5",
+    name_en: "Compound Y",
+    found: true,
+    ghs_pictograms: [],
+    hazard_statements: [],
+    precautionary_statements: [],
+    signal_word: null,
+  });
+
+  it("does not take the solvent's hazards", () => {
+    const item = buildPreparedSolutionItem(noDataParent, form("Methanol"), {
+      solventResult: methanolResult,
+    });
+    expect(item.ghs_pictograms).toEqual([]);
+    expect(item.hazard_statements).toEqual([]);
+    expect(item.preparedSolution.solventHazards.status).toBe(
+      SOLVENT_HAZARD_STATUS.NOT_INCLUDED,
+    );
+  });
+
+  it("treats a signal word alone as no data", () => {
+    const item = buildPreparedSolutionItem(
+      { ...noDataParent, signal_word: "Warning" },
+      form("Methanol"),
+      { solventResult: methanolResult },
+    );
+    expect(item.ghs_pictograms).toEqual([]);
+  });
+
+  it("does not merge into a parent whose own lookup failed upstream", () => {
+    const item = buildPreparedSolutionItem(
+      { ...noDataParent, upstream_error: true },
+      form("Methanol"),
+      { solventResult: methanolResult },
+    );
+    expect(item.ghs_pictograms).toEqual([]);
+  });
+
+  it("still merges into a parent with hazard statements and no pictogram", () => {
+    const item = buildPreparedSolutionItem(
+      { ...noDataParent, hazard_statements: [{ code: "H413" }] },
+      form("Methanol"),
+      { solventResult: methanolResult },
+    );
+    expect(codesOf(item.ghs_pictograms)).toEqual(["GHS02", "GHS06", "GHS08"]);
+    expect(codesOf(item.hazard_statements)).toContain("H413");
+    expect(item.preparedSolution.solventHazards.status).toBe(
+      SOLVENT_HAZARD_STATUS.INCLUDED,
+    );
+  });
+
+  it("still merges when only an alternate classification has data", () => {
+    const item = buildPreparedSolutionItem(
+      {
+        ...noDataParent,
+        other_classifications: [
+          { pictograms: [{ code: "GHS07" }], hazard_statements: [{ code: "H302" }] },
+        ],
+      },
+      form("Methanol"),
+      { solventResult: methanolResult },
+    );
+    expect(item.preparedSolution.solventHazards.status).toBe(
+      SOLVENT_HAZARD_STATUS.INCLUDED,
+    );
+  });
+});

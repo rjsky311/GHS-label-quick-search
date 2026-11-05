@@ -141,7 +141,7 @@ const PRINT_TEXT_FALLBACKS = {
     "print.preparedNote":
       "Prepared solution - hazard data from the parent chemical (plus the solvent when listed). Classification may differ for the actual mixture; verify against the official SDS before use.",
     "print.preparedParentWarning":
-      "Parent chemical hazard data - not verified mixture classification. Verify against the official SDS before use.",
+      "Hazard data from the parent chemical (plus the solvent when listed) - not a verified mixture classification. Verify against the official SDS before use.",
     "print.solventHazardsNotIncluded":
       "Solvent hazards not included: {{solvent}}. Check the solvent's SDS.",
     "print.solventHazardsIncluded":
@@ -193,7 +193,7 @@ const PRINT_TEXT_FALLBACKS = {
     "print.statementWordingUnavailable":
       "Wording unavailable - verify SDS before use.",
     "print.footerHazardSource":
-      "Hazard source: PubChem/SDS reference",
+      "Hazard source: PubChem",
     "print.footerVerifyShort":
       "Verify against SDS, supplier label, and local regulations before use.",
     "trust.printFooter":
@@ -227,11 +227,11 @@ const PRINT_TEXT_FALLBACKS = {
     "print.preparedNote":
       "此為配製溶液 / Prepared solution - 危害資料取自母化學品（列出溶劑危害時含溶劑）；實際混合物分類可能不同。使用前請以官方安全資料表（SDS）為準 / Hazard data from the parent chemical (plus the solvent when listed); verify against the official SDS before use.",
     "print.preparedParentWarning":
-      "母化學品危害資料 / Parent chemical hazard data - 尚未驗證實際混合物分類。使用前請以官方安全資料表（SDS）為準 / Not verified mixture classification; verify against the official SDS before use.",
+      "危害資料取自母化學品（列出溶劑危害時含溶劑） / Hazard data from the parent chemical (plus the solvent when listed) - 尚未驗證實際混合物分類。使用前請以官方安全資料表（SDS）為準 / Not a verified mixture classification; verify against the official SDS before use.",
     "print.solventHazardsNotIncluded":
       "未納入溶劑危害：{{solvent}}，請查溶劑的安全資料表（SDS） / Solvent hazards not included: {{solvent}}. Check the solvent's SDS.",
     "print.solventHazardsIncluded":
-      "含溶劑危害：{{solvent}}（CAS {{cas}}），未因稀釋減少危害 / Includes solvent hazards: {{solvent}} (CAS {{cas}}). Not reduced for dilution.",
+      "含溶劑危害：{{solvent}}（CAS {{cas}}），未因稀釋減少危害 / Includes solvent hazards: {{solventEn}} (CAS {{cas}}). Not reduced for dilution.",
     "print.solventHazardsNotIncludedShort": "未納入溶劑危害 / Solvent hazards not included",
     "print.solventHazardsIncludedShort": "含溶劑危害 / Incl. solvent hazards",
     "print.preparedBy": "配製人 / Prepared by",
@@ -279,7 +279,7 @@ const PRINT_TEXT_FALLBACKS = {
     "print.statementWordingUnavailable":
       "尚無完整文字 - 使用前請核對 SDS。",
     "print.footerHazardSource":
-      "參考資料：PubChem/SDS / Reference data: PubChem/SDS",
+      "參考資料：PubChem / Reference data: PubChem",
     "print.footerVerifyShort":
       "使用前請對照 SDS、供應商標示與當地法規 / Verify against SDS, supplier label, and local regulations before use.",
     "trust.printFooter":
@@ -859,6 +859,7 @@ const renderPreparedSolventHazards = (chemical, model) => {
   const text = included
     ? model.t("print.solventHazardsIncluded", {
         solvent: getSolventHazardDisplayName(solventHazards, model.locale),
+        solventEn: getSolventHazardDisplayName(solventHazards, "en"),
         cas: solventHazards.solventCas || "-",
       })
     : model.t("print.solventHazardsNotIncluded", {
@@ -1421,7 +1422,7 @@ const renderStandardTemplate = (chemical, model) => {
             includeCas: true,
             includeBatch: true,
             includePrepared: true,
-            preparedDetailLimit: model.layout.size === "small" ? 1 : 2,
+            preparedDetailLimit: 2,
           }),
         })}
       </div>

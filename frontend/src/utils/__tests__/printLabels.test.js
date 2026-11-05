@@ -3974,7 +3974,7 @@ describe("printLabels", () => {
       expect(documentBundle.pagesHtml).toContain("continuation-use-warning");
       expect(documentBundle.pagesHtml).toContain("compliance-footer-metadata");
       expect(documentBundle.pagesHtml).toContain(
-        "Hazard source: PubChem/SDS reference",
+        "Hazard source: PubChem",
       );
       expect(documentBundle.pagesHtml).toContain(
         "Verify against SDS, supplier label, and local regulations before use.",
@@ -4155,7 +4155,7 @@ describe("printLabels", () => {
         "GHS repeated for page matching",
       );
       expect(documentBundle.html).toContain(
-        "Hazard source: PubChem/SDS reference",
+        "Hazard source: PubChem",
       );
       expect(documentBundle.html).toContain(
         "Verify against SDS, supplier label, and local regulations before use.",
@@ -6278,7 +6278,7 @@ describe("prepared solution print rendering", () => {
       const html = documentBundle.html;
       expect(html).toContain("配製溶液 / Prepared solution");
       expect(html).toContain("prepared-identity-block");
-      expect(html).toContain("母化學品危害資料 / Parent chemical hazard data");
+      expect(html).toContain("危害資料取自母化學品（列出溶劑危害時含溶劑） / Hazard data from the parent chemical");
       expect(html).toContain("prepared-solution-identity");
       expect(html).toContain("prepared-parent-warning");
       expect(html).toContain("濃度 / Concentration");
@@ -6287,7 +6287,7 @@ describe("prepared solution print rendering", () => {
       expect(html).toContain("危害說明 / Hazard statements");
       expect(html).toContain("預防措施 / Precautionary statements");
       expect(html).toContain("掃描開啟此化學品查詢頁 / Scan to open this chemical lookup");
-      expect(html).toContain("參考資料：PubChem/SDS / Reference data");
+      expect(html).toContain("參考資料：PubChem / Reference data");
       expect(html).toContain(
         "使用前請對照 SDS、供應商標示與當地法規 / Verify against SDS, supplier label, and local regulations before use.",
       );

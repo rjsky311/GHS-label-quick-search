@@ -384,9 +384,9 @@ describe("print QA matrix report", () => {
       expect(html).toContain("濃度 / Concentration");
       expect(html).toContain("溶劑 / Solvent");
       expect(html).toContain("配製人 / Prepared by");
-      expect(html).toContain("母化學品危害資料 / Parent chemical hazard data");
+      expect(html).toContain("危害資料取自母化學品（列出溶劑危害時含溶劑） / Hazard data from the parent chemical");
       expect(html).not.toContain(
-        ">Parent chemical hazard data - not verified mixture classification",
+        ">Hazard data from the parent chemical (plus the solvent when listed) - not a verified mixture classification",
       );
     } finally {
       if (previousOutputDir === undefined) {

@@ -5312,6 +5312,30 @@ CHEMICAL_NAMES_ZH_EXPANDED = {
 
 # Chinese aliases (俗名/口語名 → CAS)
 ALIASES_ZH = {
+    # ── 實驗室常用名 ──
+    "乙酸": "64-19-7",           # Acetic acid
+    "己烷": "110-54-3",          # n-Hexane
+    "甲醛": "50-00-0",           # Formaldehyde
+    "氫氟酸": "7664-39-3",       # Hydrogen fluoride
+    "氟化氫": "7664-39-3",       # Hydrogen fluoride
+    "氫溴酸": "10035-10-6",      # Hydrogen bromide
+    "丁基鋰": "109-72-8",        # n-Butyllithium
+    "溴": "7726-95-6",           # Bromine
+    "二甲胺": "124-40-3",        # Dimethylamine
+    "二甲基甲醯胺": "68-12-2",    # N,N-Dimethylformamide
+    "甲烷": "74-82-8",           # Methane
+    "乙烷": "74-84-0",           # Ethane
+    "丙烷": "74-98-6",           # Propane
+    "丁烷": "106-97-8",          # Butane
+    "氫": "1333-74-0",           # Hydrogen
+    "氧": "7782-44-7",           # Oxygen
+    "氮": "7727-37-9",           # Nitrogen
+    "氯": "7782-50-5",           # Chlorine
+    "硫": "7704-34-9",           # Sulfur
+    "鉛": "7439-92-1",           # Lead
+    "銅": "7440-50-8",           # Copper
+    "鋅": "7440-66-6",           # Zinc
+    "銀": "7440-22-4",           # Silver
     # ── 常見溶劑 ──
     "酒精": "64-17-5",           # 乙醇 Ethanol
     "工業酒精": "67-56-1",       # 甲醇 Methanol
@@ -5408,6 +5432,79 @@ ALIASES_ZH = {
 
 # English aliases (common/trade names → CAS)
 ALIASES_EN = {
+    # ── Everyday lab names and formula shorthand ──
+    "hcl": "7647-01-0",                # Hydrogen chloride
+    "hf": "7664-39-3",                 # Hydrogen fluoride
+    "hydrofluoric acid": "7664-39-3",  # Hydrogen fluoride
+    "hbr": "10035-10-6",               # Hydrogen bromide
+    "hydrobromic acid": "10035-10-6",  # Hydrogen bromide
+    "h2so4": "7664-93-9",              # Sulfuric acid
+    "hno3": "7697-37-2",               # Nitric acid
+    "naoh": "1310-73-2",               # Sodium hydroxide
+    "koh": "1310-58-3",                # Potassium hydroxide
+    "h2o2": "7722-84-1",               # Hydrogen peroxide
+    "nh3": "7664-41-7",                # Ammonia
+    "meoh": "67-56-1",                 # Methanol
+    "etoh": "64-17-5",                 # Ethanol
+    "isopropanol": "67-63-0",          # Propan-2-ol
+    "2-propanol": "67-63-0",           # Propan-2-ol
+    "1-butanol": "71-36-3",            # Butan-1-ol
+    "tert-butanol": "75-65-0",         # 2-Methylpropan-2-ol
+    "dichloromethane": "75-09-2",      # Dichloromethane
+    "methylene chloride": "75-09-2",   # Dichloromethane
+    "ch2cl2": "75-09-2",               # Dichloromethane
+    "chcl3": "67-66-3",                # Chloroform
+    "etoac": "141-78-6",               # Ethyl acetate
+    "mecn": "75-05-8",                 # Acetonitrile
+    "acoh": "64-19-7",                 # Acetic acid
+    "ac2o": "108-24-7",                # Acetic anhydride
+    "n-hexane": "110-54-3",            # Hexane
+    "heptane": "142-82-5",             # Heptane
+    "diethyl ether": "60-29-7",        # Diethyl ether
+    "dimethylformamide": "68-12-2",    # N,N-Dimethylformamide
+    "dipea": "7087-68-5",              # N,N-Diisopropylethylamine
+    "sodium bicarbonate": "144-55-8",  # Sodium hydrogen carbonate
+    "butyllithium": "109-72-8",        # n-Butyllithium
+    "n-buli": "109-72-8",              # n-Butyllithium
+    "nah": "7646-69-7",                # Sodium hydride
+    "nabh4": "16940-66-2",             # Sodium borohydride
+    "acetyl chloride": "75-36-5",      # Acetyl chloride
+    "formaldehyde": "50-00-0",         # Formaldehyde
+    "hydrazine": "302-01-2",           # Hydrazine
+    "lead": "7439-92-1",               # Lead metal
+    "gold": "7440-57-5",               # Gold metal
+    "cobalt": "7440-48-4",             # Cobalt metal
+    "methane": "74-82-8",              # Methane
+    "ethane": "74-84-0",               # Ethane
+    "propane": "74-98-6",              # Propane
+    "butane": "106-97-8",              # Butane
+    "ethylene": "74-85-1",             # Ethylene gas
+    "t-butanol": "75-65-0",            # 2-Methylpropan-2-ol
+    "dioxane": "123-91-1",             # 1,4-Dioxane
+    "acrylamide": "79-06-1",           # Acrylamide
+    "water": "7732-18-5",              # Water
+    "oxalic acid": "144-62-7",         # Oxalic acid
+    "boric acid": "10043-35-3",        # Boric acid
+    "perchloric acid": "7601-90-3",    # Perchloric acid
+    "copper sulfate": "7758-98-7",     # Copper(II) sulfate
+    "carbon dioxide": "124-38-9",      # Carbon dioxide
+    "carbon monoxide": "630-08-0",     # Carbon monoxide
+    "hydrogen": "1333-74-0",           # Hydrogen gas
+    "oxygen": "7782-44-7",             # Oxygen gas
+    "nitrogen": "7727-37-9",           # Nitrogen gas
+    "helium": "7440-59-7",             # Helium
+    "argon": "7440-37-1",              # Argon
+    "chlorine": "7782-50-5",           # Chlorine gas
+    "sulfur": "7704-34-9",             # Sulfur
+    "copper": "7440-50-8",             # Copper metal
+    "zinc": "7440-66-6",               # Zinc metal
+    "aluminum": "7429-90-5",           # Aluminum metal
+    "aluminium": "7429-90-5",          # Aluminum metal
+    "nickel": "7440-02-0",             # Nickel metal
+    "magnesium": "7439-95-4",          # Magnesium metal
+    "titanium": "7440-32-6",           # Titanium metal
+    "chromium": "7440-47-3",           # Chromium metal
+    "manganese": "7439-96-5",          # Manganese metal
     # ── Common solvents ──
     "rubbing alcohol": "67-63-0",       # Isopropanol
     "isopropyl alcohol": "67-63-0",     # IPA

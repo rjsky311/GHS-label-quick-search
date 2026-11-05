@@ -134,6 +134,14 @@ describe("prepared-solution labels with a solvent other than water", () => {
   });
 });
 
+describe("prepared-solution small container front label", () => {
+  it.each(["small-strip", "small-rack"])("%s names the concentration and the solvent", (stockPreset) => {
+    const html = preview(inMethanol, { template: "standard", stockPreset });
+    expect(html).toContain("10 mM");
+    expect(html).toContain("Methanol");
+  });
+});
+
 describe("prepared-solution labels in water", () => {
   it.each(COMPLETE_LAYOUTS)("X in water: %s is unchanged and has no solvent line", (_label, layout) => {
     const html = preview(inWater, layout);

@@ -72,6 +72,19 @@ describe("printStatementPriority", () => {
     );
   });
 
+  it("ranks gases that can react explosively without air in the top tier", () => {
+    expect(getHazardStatementPriority({ code: "H230" })).toBe(HAZARD_PRIORITY_TIER.SEVERE);
+    expect(getHazardStatementPriority({ code: "H231" })).toBe(HAZARD_PRIORITY_TIER.SEVERE);
+    expect(getHazardStatementPriority({ code: "H232" })).toBe(HAZARD_PRIORITY_TIER.SEVERE);
+  });
+
+  it("puts ignition, water-reactive, inert-gas and no-contact precautions up front", () => {
+    const ordered = prioritizePrecautionaryStatements(
+      statements("P501", "P403", "P233", "P220", "P223", "P231", "P262", "P282"),
+    );
+    expect(codesOf(ordered).slice(0, 5)).toEqual(["P220", "P223", "P231", "P262", "P282"]);
+  });
+
   it("keeps the original order for equal scores", () => {
     expect(
       codesOf(prioritizeHazardStatements(statements("H331", "H314", "H301"))),

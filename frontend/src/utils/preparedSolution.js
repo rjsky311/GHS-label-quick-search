@@ -79,6 +79,7 @@
  * explicit).
  */
 
+import { listGhsClassifications } from "@/utils/selectedGhsClassification";
 import {
   SOLVENT_HAZARD_STATUS,
   mergeSolventHazardsIntoChemical,
@@ -133,9 +134,20 @@ export function buildPreparedSolutionItem(parent, formValues, options = {}) {
   const preparedBy = normaliseOptional(formValues?.preparedBy);
   const preparedDate = normaliseOptional(formValues?.preparedDate);
   const expiryDate = normaliseOptional(formValues?.expiryDate);
+  // The print gate reads hazard evidence after this merge, so a parent nobody
+  // has classified would pass on the solvent's hazards alone and look
+  // classified. Such a parent keeps its empty data and stays blocked.
+  const parentHasHazardEvidence =
+    !parent.upstream_error &&
+    listGhsClassifications(parent).some(
+      (classification) =>
+        (classification.pictograms || []).length > 0 ||
+        (classification.hazard_statements || []).length > 0 ||
+        (classification.precautionary_statements || []).length > 0,
+    );
   const solventHazards = resolveSolventHazards(
     solvent,
-    options?.solventResult || null,
+    parentHasHazardEvidence ? options?.solventResult || null : null,
   );
   const hazardSource =
     solventHazards.status === SOLVENT_HAZARD_STATUS.INCLUDED
