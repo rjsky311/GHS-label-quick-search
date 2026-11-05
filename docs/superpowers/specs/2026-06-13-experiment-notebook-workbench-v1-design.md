@@ -348,12 +348,12 @@ Required artifacts:
 
 Implementation should update:
 
-- `EXPERIMENT_NOTEBOOK_DESIGN_LANGUAGE.md` only if this spec changes the
+- `docs/maintainers/EXPERIMENT_NOTEBOOK_DESIGN_LANGUAGE.md` only if this spec changes the
   design language, not for routine implementation details.
 - Existing implementation plan docs only if they remain referenced as current
   execution context.
 - Test/QA docs if a new visual QA script or acceptance gate is added.
-- `PROJECT_STATUS_AND_NEXT_PLAN.md` only if this becomes a shipped baseline or
+- `docs/maintainers/PROJECT_STATUS_AND_NEXT_PLAN.md` only if this becomes a shipped baseline or
   changes next-slice selection.
 
 ## Implementation Order

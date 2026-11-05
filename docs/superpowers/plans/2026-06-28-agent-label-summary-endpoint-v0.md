@@ -37,8 +37,8 @@ This slice must not add:
 ### Task 1: Open The Endpoint Slice
 
 **Files:**
-- Modify: `NEXT_PRODUCT_WORK.md`
-- Modify: `PROJECT_STATUS_AND_NEXT_PLAN.md`
+- Modify: `docs/maintainers/NEXT_PRODUCT_WORK.md`
+- Modify: `docs/maintainers/PROJECT_STATUS_AND_NEXT_PLAN.md`
 
 - [ ] Close the `agent_label_summary.v0` contract slice with local and remote proof.
 - [ ] Make the read-only endpoint/OpenAPI slice active.

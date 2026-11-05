@@ -626,7 +626,7 @@ Expected result: both integration files pass.
 ## Task 6: Verification And Documentation State
 
 **Files:**
-- Modify: `NEXT_PRODUCT_WORK.md` only after the implementation is verified and the active slice state genuinely changes.
+- Modify: `docs/maintainers/NEXT_PRODUCT_WORK.md` only after the implementation is verified and the active slice state genuinely changes.
 
 - [ ] **Step 1: Run the focused prepared-label test set**
 
@@ -688,7 +688,7 @@ Expected result: exit code 0 with no whitespace errors.
 
 - [ ] **Step 6: Update live queue state only if code implementation ships**
 
-If the implementation completes and verification passes, update `NEXT_PRODUCT_WORK.md` to record:
+If the implementation completes and verification passes, update `docs/maintainers/NEXT_PRODUCT_WORK.md` to record:
 
 ```markdown
 Latest closed concrete slice: the 2026-06-28 prepared-solution entry clarity
@@ -698,7 +698,7 @@ labels, pinned bilingual copy for parent-hazard reuse and non-reclassification,
 and verified the focused header/sidebar/modal/i18n/prepared-flow gates.
 ```
 
-Keep `LAB_WORKFLOW_READINESS_ROADMAP.md` unchanged unless the product direction, guardrails, stop condition, or roadmap order changes.
+Keep `docs/maintainers/LAB_WORKFLOW_READINESS_ROADMAP.md` unchanged unless the product direction, guardrails, stop condition, or roadmap order changes.
 
 - [ ] **Step 7: Check repository state before staging**
 
@@ -723,11 +723,11 @@ git add frontend/src/components/Header.jsx \
   frontend/src/i18n/__tests__/i18n.test.js \
   frontend/src/i18n/locales/zh-TW.json \
   frontend/src/i18n/locales/en.json \
-  NEXT_PRODUCT_WORK.md
+  docs/maintainers/NEXT_PRODUCT_WORK.md
 git commit -m "Clarify prepared label entry workflow"
 ```
 
-If `NEXT_PRODUCT_WORK.md` is not changed because the implementation is not yet shipped, omit it from `git add`.
+If `docs/maintainers/NEXT_PRODUCT_WORK.md` is not changed because the implementation is not yet shipped, omit it from `git add`.
 
 ## Post-Deploy Production QA
 

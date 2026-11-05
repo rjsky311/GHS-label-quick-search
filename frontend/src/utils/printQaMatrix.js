@@ -23,9 +23,9 @@ export const PRINT_QA_PICTOGRAMS = Object.freeze([
 ]);
 
 export const PRINT_QA_PROFILE = Object.freeze({
-  organization: "Laboratory Safety Office",
-  phone: "+886-2-2368-0000",
-  address: "12 Safety Archive Rd., Taipei",
+  organization: "Demo Safety Lab",
+  phone: "02-1234-5678",
+  address: "1 Lab Road, Taipei",
 });
 
 export const PRINT_QA_CASE_FIELDS = Object.freeze({

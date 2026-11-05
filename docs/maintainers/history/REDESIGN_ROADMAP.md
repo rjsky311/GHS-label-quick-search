@@ -32,7 +32,6 @@ Status: landed in the current productization pass.
 Deliverables:
 
 - `DESIGN.md`
-- `BRANDED_UTILITY_STRATEGY.md`
 - `REDESIGN_ROADMAP.md`
 - README/AGENTS/roadmap sync for v1.10 and Vite
 - Local Vite CORS alignment for browser-based QA

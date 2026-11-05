@@ -284,7 +284,7 @@ Expected: exit 0.
 
 - [x] **Step 5: Update state docs**
 
-Update `PROJECT_STATUS_AND_NEXT_PLAN.md`, `NEXT_PRODUCT_WORK.md`, and `LAB_WORKFLOW_READINESS_ROADMAP.md` only with a concise breadcrumb:
+Update `docs/maintainers/PROJECT_STATUS_AND_NEXT_PLAN.md`, `docs/maintainers/NEXT_PRODUCT_WORK.md`, and `docs/maintainers/LAB_WORKFLOW_READINESS_ROADMAP.md` only with a concise breadcrumb:
 
 - mode: RSL v2 `default`
 - risk tier: `browser_no_spend`
@@ -295,7 +295,7 @@ Update `PROJECT_STATUS_AND_NEXT_PLAN.md`, `NEXT_PRODUCT_WORK.md`, and `LAB_WORKF
 - [x] **Step 6: Commit exact files**
 
 ```bash
-git add frontend/src/index.css frontend/src/components/Header.jsx frontend/src/components/SearchSection.jsx frontend/src/components/ResultsTable.jsx frontend/src/components/LabelPrintModal.jsx frontend/src/components/label-print/MultipleGhsPrintWarning.jsx frontend/src/components/label-print/labelPrintModalHelpers.js frontend/src/components/label-print/LabelPreviewPanel.jsx frontend/src/components/label-print/BatchFitReport.jsx frontend/src/__tests__/themeTokens.test.js frontend/src/components/__tests__/Header.test.js frontend/src/components/__tests__/SearchSection.test.js frontend/src/components/__tests__/ResultsTable.test.js frontend/src/components/__tests__/LabelPrintModal.test.js PROJECT_STATUS_AND_NEXT_PLAN.md NEXT_PRODUCT_WORK.md LAB_WORKFLOW_READINESS_ROADMAP.md docs/superpowers/plans/2026-06-29-dark-bench-legibility-pass.md
+git add frontend/src/index.css frontend/src/components/Header.jsx frontend/src/components/SearchSection.jsx frontend/src/components/ResultsTable.jsx frontend/src/components/LabelPrintModal.jsx frontend/src/components/label-print/MultipleGhsPrintWarning.jsx frontend/src/components/label-print/labelPrintModalHelpers.js frontend/src/components/label-print/LabelPreviewPanel.jsx frontend/src/components/label-print/BatchFitReport.jsx frontend/src/__tests__/themeTokens.test.js frontend/src/components/__tests__/Header.test.js frontend/src/components/__tests__/SearchSection.test.js frontend/src/components/__tests__/ResultsTable.test.js frontend/src/components/__tests__/LabelPrintModal.test.js docs/maintainers/PROJECT_STATUS_AND_NEXT_PLAN.md docs/maintainers/NEXT_PRODUCT_WORK.md docs/maintainers/LAB_WORKFLOW_READINESS_ROADMAP.md docs/superpowers/plans/2026-06-29-dark-bench-legibility-pass.md
 git commit -m "Improve Dark Bench legibility"
 ```
 

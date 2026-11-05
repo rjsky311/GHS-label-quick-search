@@ -1,8 +1,8 @@
 {
   "ok": true,
   "generatedAt": "2026-06-21T17:09:58.318Z",
-  "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-product-qa-report.json",
-  "summaryReportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-print-qa-summary.json",
+  "reportPath": "frontend/build/production-product-qa-report.json",
+  "summaryReportPath": "frontend/build/production-print-qa-summary.json",
   "defaultStepTimeoutMs": 1800000,
   "stepTimeouts": {
     "production-smoke": 7200000,

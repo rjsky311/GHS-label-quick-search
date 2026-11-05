@@ -7,7 +7,7 @@
 **Locked design reference (source of truth):**
 `docs/design-mockups/2026-07-07-ui-redesign/R2-warm-strong-paper.html` — a self-contained toggle mockup showing both themes (button top-right flips light/dark). Every color, type, spacing, and material decision below is taken from it. When this plan and the mockup disagree, the mockup wins for look; this plan wins for which real files/tokens to touch.
 
-**Design language authority:** `EXPERIMENT_NOTEBOOK_DESIGN_LANGUAGE.md` (Comfort Dim + Dark Bench themes, button/chip language, material rules, responsive rules, accessibility + QA gates) and `DESIGN.md`. This redesign REFINES that language; it does not replace it.
+**Design language authority:** `docs/maintainers/EXPERIMENT_NOTEBOOK_DESIGN_LANGUAGE.md` (Comfort Dim + Dark Bench themes, button/chip language, material rules, responsive rules, accessibility + QA gates) and `docs/maintainers/DESIGN.md`. This redesign REFINES that language; it does not replace it.
 
 **Tech stack:** React + Vite, Tailwind (`darkMode: ["class"]`), shadcn/ui (new-york, `cssVariables: true`, tokens in `src/index.css`), lucide icons, Jest. Fonts via Google Fonts `<link>` in `index.html`.
 
@@ -132,7 +132,7 @@ From R2, applied to the real shell/components (not the print preview internals):
 - [x] Output selector, action buttons, config controls, and the label-stock canvas backing restyled. The white preview sheet contents stay print-true and untouched. `test:print-contract` stays green with zero print-HTML diff.
 
 ### Phase 4 — QA + docs closure
-**Files:** `EXPERIMENT_NOTEBOOK_DESIGN_LANGUAGE.md` (mark adopted), `NEXT_PRODUCT_WORK.md`, this plan
+**Files:** `docs/maintainers/EXPERIMENT_NOTEBOOK_DESIGN_LANGUAGE.md` (mark adopted), `docs/maintainers/NEXT_PRODUCT_WORK.md`, this plan
 - [x] Full desktop + mobile screenshots, both themes, archived under `qa/evidence/2026-07-07-ui-redesign/`. Confirm all accessibility checks. Update docs to "adopted".
 
 2026-07-08 closure evidence for the final Phase 2-4 chunk is archived in

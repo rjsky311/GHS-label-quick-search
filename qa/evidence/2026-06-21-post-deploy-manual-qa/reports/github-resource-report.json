@@ -2,7 +2,7 @@
   "ok": true,
   "generatedAt": "2026-06-21T10:51:47.533Z",
   "repo": "rjsky311/GHS-label-quick-search",
-  "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/github-resource-report.json",
+  "reportPath": "frontend/build/github-resource-report.json",
   "thresholds": {
     "repoDiskKiB": 102400,
     "artifactsBytes": 1073741824,

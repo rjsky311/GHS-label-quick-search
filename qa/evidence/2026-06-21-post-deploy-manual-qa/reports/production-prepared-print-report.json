@@ -7,8 +7,8 @@
   "headless": true,
   "preparedCaseAttempts": 3,
   "preparedPageAttempts": 10,
-  "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-prepared-print-report.json",
-  "screenshotDir": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-prepared-print-screenshots",
+  "reportPath": "frontend/build/production-prepared-print-report.json",
+  "screenshotDir": "frontend/build/production-prepared-print-screenshots",
   "summary": {
     "total": 9,
     "passed": 9,
@@ -93,7 +93,7 @@
             }
           ]
         },
-        "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-prepared-print-screenshots/prepared-a4-primary.png"
+        "screenshotPath": "frontend/build/production-prepared-print-screenshots/prepared-a4-primary.png"
       },
       "status": {
         "data-status": "qa_handoff",
@@ -255,7 +255,7 @@
             }
           ]
         },
-        "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-prepared-print-screenshots/prepared-qr-supplement.png"
+        "screenshotPath": "frontend/build/production-prepared-print-screenshots/prepared-qr-supplement.png"
       },
       "status": {
         "data-status": "qa_handoff",
@@ -433,7 +433,7 @@
             }
           ]
         },
-        "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-prepared-print-screenshots/prepared-tube-quick-id.png"
+        "screenshotPath": "frontend/build/production-prepared-print-screenshots/prepared-tube-quick-id.png"
       },
       "status": {
         "data-status": "qa_handoff",
@@ -613,7 +613,7 @@
             }
           ]
         },
-        "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-prepared-print-screenshots/prepared-reprint-a4-primary.png"
+        "screenshotPath": "frontend/build/production-prepared-print-screenshots/prepared-reprint-a4-primary.png"
       },
       "status": {
         "data-status": "qa_handoff",
@@ -793,7 +793,7 @@
             }
           ]
         },
-        "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-prepared-print-screenshots/prepared-reprint-qr-supplement.png"
+        "screenshotPath": "frontend/build/production-prepared-print-screenshots/prepared-reprint-qr-supplement.png"
       },
       "status": {
         "data-status": "qa_handoff",
@@ -989,7 +989,7 @@
             }
           ]
         },
-        "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-prepared-print-screenshots/prepared-reprint-tube-quick-id.png"
+        "screenshotPath": "frontend/build/production-prepared-print-screenshots/prepared-reprint-tube-quick-id.png"
       },
       "status": {
         "data-status": "qa_handoff",
@@ -1204,7 +1204,7 @@
             }
           ]
         },
-        "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-prepared-print-screenshots/prepared-preset-a4-primary.png"
+        "screenshotPath": "frontend/build/production-prepared-print-screenshots/prepared-preset-a4-primary.png"
       },
       "status": {
         "data-status": "qa_handoff",
@@ -1387,7 +1387,7 @@
             }
           ]
         },
-        "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-prepared-print-screenshots/prepared-preset-qr-supplement.png"
+        "screenshotPath": "frontend/build/production-prepared-print-screenshots/prepared-preset-qr-supplement.png"
       },
       "status": {
         "data-status": "qa_handoff",
@@ -1586,7 +1586,7 @@
             }
           ]
         },
-        "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-prepared-print-screenshots/prepared-preset-tube-quick-id.png"
+        "screenshotPath": "frontend/build/production-prepared-print-screenshots/prepared-preset-tube-quick-id.png"
       },
       "status": {
         "data-status": "qa_handoff",

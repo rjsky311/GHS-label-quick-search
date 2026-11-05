@@ -14,12 +14,12 @@
 
 **Files:**
 - Create: `docs/superpowers/plans/2026-06-28-agent-live-availability-audit.md`
-- Modify: `PROJECT_STATUS_AND_NEXT_PLAN.md`
-- Modify: `NEXT_PRODUCT_WORK.md`
+- Modify: `docs/maintainers/PROJECT_STATUS_AND_NEXT_PLAN.md`
+- Modify: `docs/maintainers/NEXT_PRODUCT_WORK.md`
 
 - [x] **Step 1: Record the slice source and non-goals**
 
-  In `PROJECT_STATUS_AND_NEXT_PLAN.md` and `NEXT_PRODUCT_WORK.md`, record:
+  In `docs/maintainers/PROJECT_STATUS_AND_NEXT_PLAN.md` and `docs/maintainers/NEXT_PRODUCT_WORK.md`, record:
   - Source: completion audit after the closed Agent `/llms.txt` guide slice.
   - Affected user job: Coding Agents, scripts, LIMS/ELN helpers, and inventory cleanup workflows can discover the API guide and read a structured label summary without scraping the UI.
   - Non-goals: no endpoint changes, no write paths, no crawler policy change, no compliance advice, no print behavior change, no public-data approval workflow.
@@ -51,7 +51,7 @@
 
   ```bash
   git status --short
-  git add docs/superpowers/plans/2026-06-28-agent-live-availability-audit.md PROJECT_STATUS_AND_NEXT_PLAN.md NEXT_PRODUCT_WORK.md
+  git add docs/superpowers/plans/2026-06-28-agent-live-availability-audit.md docs/maintainers/PROJECT_STATUS_AND_NEXT_PLAN.md docs/maintainers/NEXT_PRODUCT_WORK.md
   git diff --cached --stat
   git commit -m "Record agent live availability audit"
   ```

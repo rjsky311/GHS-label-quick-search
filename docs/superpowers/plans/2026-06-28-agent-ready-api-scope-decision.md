@@ -12,7 +12,7 @@
 
 ## Evidence Source
 
-- Roadmap source: `LAB_WORKFLOW_READINESS_ROADMAP.md` lists safe machine-readable access as a later theme and says it must not open implementation without a scope/safety decision.
+- Roadmap source: `docs/maintainers/LAB_WORKFLOW_READINESS_ROADMAP.md` lists safe machine-readable access as a later theme and says it must not open implementation without a scope/safety decision.
 - Owner/user source: the roadmap discussion asked whether the website should be easy for Coding Agents to crawl and whether AI should get label/tag information without human UI operation.
 - Codebase source: `backend/server.py` exposes FastAPI under `/api`, with public lookup endpoints and automatic OpenAPI support; `backend/api_models.py` already exposes `ChemicalResult` fields for identity, GHS pictograms, H/P statements, signal word, alternate classifications, source metadata, cache freshness, upstream errors, and reference links.
 - Static-site source: `frontend/public/` currently contains GHS pictogram assets only; there is no `llms.txt`, `robots.txt`, or sitemap file in the public tree.
@@ -62,8 +62,8 @@ The future implementation slice should define a versioned `label_summary` schema
 ### Task 1: Record Scope Decision As The Next Design Slice
 
 **Files:**
-- Modify: `NEXT_PRODUCT_WORK.md`
-- Optionally modify: `PROJECT_STATUS_AND_NEXT_PLAN.md`
+- Modify: `docs/maintainers/NEXT_PRODUCT_WORK.md`
+- Optionally modify: `docs/maintainers/PROJECT_STATUS_AND_NEXT_PLAN.md`
 
 - [ ] **Step 1: Update the active-slice section**
 
@@ -101,7 +101,7 @@ Expected: both commands exit 0.
 
 **Files:**
 - Modify if review finds blockers: `docs/superpowers/plans/2026-06-28-agent-ready-api-scope-decision.md`
-- Modify if review changes active state: `NEXT_PRODUCT_WORK.md`
+- Modify if review changes active state: `docs/maintainers/NEXT_PRODUCT_WORK.md`
 
 - [ ] **Step 1: Safety/data-governance review**
 
@@ -135,7 +135,7 @@ No blocker found for the docs-only scope decision.
 ### Task 3: Define The Next Implementation Slice Checklist
 
 **Files:**
-- Modify: `NEXT_PRODUCT_WORK.md`
+- Modify: `docs/maintainers/NEXT_PRODUCT_WORK.md`
 - Optional future implementation files, not touched in this slice:
   - `backend/api_models.py`
   - `backend/server.py`
@@ -182,11 +182,11 @@ Expected: both commands exit 0.
 Run:
 
 ```bash
-git add docs/superpowers/plans/2026-06-28-agent-ready-api-scope-decision.md NEXT_PRODUCT_WORK.md PROJECT_STATUS_AND_NEXT_PLAN.md
+git add docs/superpowers/plans/2026-06-28-agent-ready-api-scope-decision.md docs/maintainers/NEXT_PRODUCT_WORK.md docs/maintainers/PROJECT_STATUS_AND_NEXT_PLAN.md
 git commit -m "Plan agent-ready API scope decision"
 ```
 
-Only include `PROJECT_STATUS_AND_NEXT_PLAN.md` if it changed.
+Only include `docs/maintainers/PROJECT_STATUS_AND_NEXT_PLAN.md` if it changed.
 
 - [ ] **Step 3: Push and monitor**
 

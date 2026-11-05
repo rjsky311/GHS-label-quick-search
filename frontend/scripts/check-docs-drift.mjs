@@ -47,62 +47,94 @@ function extract(relativePath, text, pattern, label) {
   return match[1];
 }
 
+// Maintainer planning documents live in docs/maintainers/. Only the files that
+// carry drift-checked contracts are listed here; older checkpoints in
+// docs/maintainers/history/ are still scanned by the encoding and stale-phrase
+// checks below.
+const maintainersDir = "docs/maintainers";
+const maintainerDocNames = [
+  "PROJECT_STATUS_AND_NEXT_PLAN.md",
+  "POST_95_REPRIORITIZATION.md",
+  "PILOT_OPERATIONS_READY_PLAN.md",
+  "PILOT_RUNBOOK.md",
+  "PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md",
+  "BATCH_FIRST_LAB_PILOT_V1_PLAN.md",
+  "LAB_READY_PILOT_95_PLAN.md",
+  "PRODUCT_SCOPE_GATE.md",
+  "AUTONOMOUS_WORKFLOW.md",
+  "NEXT_PRODUCT_WORK.md",
+  "NEXT_REMAINING_PRODUCT_WORK.md",
+  "FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md",
+  "SIMPLIFIED_LABEL_OUTPUT_MODEL.md",
+  "BATCH_LABEL_PRINT_REFACTOR_PLAN.md",
+  "PHYSICAL_PRINT_VALIDATION_CHECKLIST.md",
+  "SCIENTIFIC_AGENT_SKILLS_EVALUATION.md",
+  "CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md",
+];
+
 const docs = {
   "README.md": readText("README.md"),
   "AGENTS.md": readText("AGENTS.md"),
   "CLAUDE.md": readText("CLAUDE.md"),
-  "PROJECT_STATUS_AND_NEXT_PLAN.md": readText("PROJECT_STATUS_AND_NEXT_PLAN.md"),
-  "POST_95_REPRIORITIZATION.md": readText("POST_95_REPRIORITIZATION.md"),
-  "PILOT_OPERATIONS_READY_PLAN.md": readText("PILOT_OPERATIONS_READY_PLAN.md"),
-  "PILOT_RUNBOOK.md": readText("PILOT_RUNBOOK.md"),
-  "PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md": readText(
-    "PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md",
-  ),
-  "BATCH_FIRST_LAB_PILOT_V1_PLAN.md": readText(
-    "BATCH_FIRST_LAB_PILOT_V1_PLAN.md",
-  ),
-  "LAB_READY_PILOT_95_PLAN.md": readText("LAB_READY_PILOT_95_PLAN.md"),
-  "PRODUCT_SCOPE_GATE.md": readText("PRODUCT_SCOPE_GATE.md"),
-  "PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md": readText(
-    "PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md",
-  ),
-  "PERSONA_SURVEY_REVIEW_PACKET.md": readText("PERSONA_SURVEY_REVIEW_PACKET.md"),
-  "LINER_SURVEY_2026_06_02_FINDINGS.md": readText(
-    "LINER_SURVEY_2026_06_02_FINDINGS.md",
-  ),
-  "AUTONOMOUS_WORKFLOW.md": readText("AUTONOMOUS_WORKFLOW.md"),
-  "NEXT_PRODUCT_WORK.md": readText("NEXT_PRODUCT_WORK.md"),
-  "NEXT_REMAINING_PRODUCT_WORK.md": readText("NEXT_REMAINING_PRODUCT_WORK.md"),
-  "FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md": readText(
-    "FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md",
+  "docs/maintainers/README.md": readText(`${maintainersDir}/README.md`),
+  ...Object.fromEntries(
+    maintainerDocNames.map((name) => [name, readText(`${maintainersDir}/${name}`)]),
   ),
   "DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md": readText(
     "DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md",
   ),
-  "SIMPLIFIED_LABEL_OUTPUT_MODEL.md": readText("SIMPLIFIED_LABEL_OUTPUT_MODEL.md"),
   "PRINT_LABEL_CONTRACT.md": readText("PRINT_LABEL_CONTRACT.md"),
-  "BATCH_LABEL_PRINT_REFACTOR_PLAN.md": readText(
-    "BATCH_LABEL_PRINT_REFACTOR_PLAN.md",
-  ),
-  "PHYSICAL_PRINT_VALIDATION_CHECKLIST.md": readText(
-    "PHYSICAL_PRINT_VALIDATION_CHECKLIST.md",
-  ),
-  "BRANDED_UTILITY_STRATEGY.md": readText("BRANDED_UTILITY_STRATEGY.md"),
-  "SCIENTIFIC_AGENT_SKILLS_EVALUATION.md": readText(
-    "SCIENTIFIC_AGENT_SKILLS_EVALUATION.md",
-  ),
-  "CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md": readText(
-    "CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md",
-  ),
   "frontend/public/llms.txt": readText("frontend/public/llms.txt"),
 };
 
+// The repository root keeps only user-facing and safety-contract documents.
+// Planning, status, and checkpoint documents belong in docs/maintainers/.
+const allowedRootMarkdown = new Set([
+  "README.md",
+  "AGENTS.md",
+  "CLAUDE.md",
+  "SECURITY.md",
+  "PRINT_LABEL_CONTRACT.md",
+  "DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md",
+]);
+for (const fileName of fs.readdirSync(repoRoot)) {
+  if (fileName.endsWith(".md") && !allowedRootMarkdown.has(fileName)) {
+    failures.push(
+      `${fileName} must live in ${maintainersDir}/ (the repository root only keeps user-facing and safety-contract documents).`,
+    );
+  }
+}
+
+function listMarkdown(relativeDir) {
+  const dirPath = path.join(repoRoot, relativeDir);
+  if (!fs.existsSync(dirPath)) {
+    failures.push(`Missing required directory: ${relativeDir}`);
+    return [];
+  }
+  return fs.readdirSync(dirPath, { withFileTypes: true }).flatMap((entry) => {
+    const entryPath = `${relativeDir}/${entry.name}`;
+    if (entry.isDirectory()) return listMarkdown(entryPath);
+    return entry.name.endsWith(".md") ? [entryPath] : [];
+  });
+}
+
 const rootMarkdownDocs = Object.fromEntries(
-  fs
-    .readdirSync(repoRoot)
-    .filter((fileName) => fileName.endsWith(".md"))
-    .map((fileName) => [fileName, readText(fileName)]),
+  [
+    ...fs.readdirSync(repoRoot).filter((fileName) => fileName.endsWith(".md")),
+    ...listMarkdown(maintainersDir),
+  ].map((relativePath) => [relativePath, readText(relativePath)]),
 );
+
+// Relative Markdown links in the public entry documents must resolve.
+for (const linkingDoc of ["README.md", "docs/CASE_STUDY.md", `${maintainersDir}/README.md`]) {
+  const linkingText = readText(linkingDoc);
+  for (const match of linkingText.matchAll(/\]\((?!https?:|mailto:|#)([^)\s#]+)(?:#[^)]*)?\)/g)) {
+    const target = path.resolve(repoRoot, path.dirname(linkingDoc), match[1]);
+    if (!fs.existsSync(target)) {
+      failures.push(`${linkingDoc} links to a missing file: ${match[1]}`);
+    }
+  }
+}
 
 const frontendPackage = JSON.parse(fs.readFileSync(path.join(frontendRoot, "package.json"), "utf8"));
 const ciWorkflow = readText(".github/workflows/ci.yml");
@@ -166,6 +198,8 @@ requireIncludes(
 
 for (const [relativePath, text] of Object.entries(docs)) {
   if (relativePath === "PROJECT_STATUS_AND_NEXT_PLAN.md") continue;
+  // CLAUDE.md only delegates to AGENTS.md, which carries the pointer.
+  if (relativePath === "CLAUDE.md") continue;
   requireIncludes(
     relativePath,
     text,
@@ -439,8 +473,14 @@ requireIncludes(
 requireIncludes(
   "CLAUDE.md",
   docs["CLAUDE.md"],
-  "short evidence-triggered live queue",
-  "compatibility entry point must route continuation through the live queue",
+  "AGENTS.md",
+  "compatibility entry point must delegate to the agent bootstrap",
+);
+requireMaxLineCount(
+  "CLAUDE.md",
+  docs["CLAUDE.md"],
+  10,
+  "compatibility entry point should stay a pointer, not a second document",
 );
 requireIncludes(
   "AGENTS.md",
@@ -478,64 +518,9 @@ requireIncludes(
   "Decision Packet",
   "scope gate must produce a bounded implementation decision",
 );
-requireIncludes(
-  "PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md",
-  docs["PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md"],
-  "Scenario Test Model",
-  "persona research plan must define role-level scenario gates",
-);
-requireIncludes(
-  "PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md",
-  docs["PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md"],
-  "LINER Survey Research Model",
-  "persona research plan must define safe external survey use",
-);
-requireIncludes(
-  "PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md",
-  docs["PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md"],
-  "PERSONA_SURVEY_REVIEW_PACKET.md",
-  "persona research plan must point to the concrete external review packet",
-);
-requireIncludes(
-  "PERSONA_SURVEY_REVIEW_PACKET.md",
-  docs["PERSONA_SURVEY_REVIEW_PACKET.md"],
-  "Safe Inputs",
-  "external review packet must define upload boundaries",
-);
-requireIncludes(
-  "PERSONA_SURVEY_REVIEW_PACKET.md",
-  docs["PERSONA_SURVEY_REVIEW_PACKET.md"],
-  "Survey Prompt Templates",
-  "external review packet must provide reusable persona prompts",
-);
-requireIncludes(
-  "PERSONA_SURVEY_REVIEW_PACKET.md",
-  docs["PERSONA_SURVEY_REVIEW_PACKET.md"],
-  "Research-to-Backlog Decision Rule",
-  "external review packet must prevent survey output from becoming unbounded work",
-);
-requireIncludes(
-  "LINER_SURVEY_2026_06_02_FINDINGS.md",
-  docs["LINER_SURVEY_2026_06_02_FINDINGS.md"],
-  "Batch Review Self-Service Clarity",
-  "first LINER findings must record the bounded implementation decision",
-);
-requireIncludes(
-  "LINER_SURVEY_2026_06_02_FINDINGS.md",
-  docs["LINER_SURVEY_2026_06_02_FINDINGS.md"],
-  "Not allowed use",
-  "external survey findings must keep compliance and correctness boundaries visible",
-);
-requireIncludes(
-  "LINER_SURVEY_2026_06_02_FINDINGS.md",
-  docs["LINER_SURVEY_2026_06_02_FINDINGS.md"],
-  "Research-To-Backlog Decision",
-  "external survey findings must route research into a bounded backlog decision",
-);
 for (const relativePath of [
-  "README.md",
   "AGENTS.md",
-  "CLAUDE.md",
+  "docs/maintainers/README.md",
   "PROJECT_STATUS_AND_NEXT_PLAN.md",
   "AUTONOMOUS_WORKFLOW.md",
   "NEXT_PRODUCT_WORK.md",
@@ -594,12 +579,6 @@ requireIncludes(
   docs["PRINT_LABEL_CONTRACT.md"],
   "GHS pictograms are never summarized",
   "print safety contract must keep pictogram non-omission visible",
-);
-requireIncludes(
-  "BRANDED_UTILITY_STRATEGY.md",
-  docs["BRANDED_UTILITY_STRATEGY.md"],
-  "safety decision",
-  "brand strategy must preserve the low-noise safety boundary",
 );
 requireIncludes(
   "SCIENTIFIC_AGENT_SKILLS_EVALUATION.md",

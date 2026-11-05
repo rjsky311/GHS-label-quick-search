@@ -42,9 +42,9 @@ Stop condition:
   - Render new review-only evidence sections in Markdown.
 - Modify: `frontend/scripts/__tests__/inventory-print-sampling.test.mjs`
   - Add RED tests for checksum-invalid CAS exclusion, blank source-name reporting, short-name sample selection, and `NO GHS` marker reporting.
-- Modify: `NEXT_PRODUCT_WORK.md`
+- Modify: `docs/maintainers/NEXT_PRODUCT_WORK.md`
   - Add an audit breadcrumb that the Organic CSV evidence pass was opened from a real owner-provided CSV and stayed local/review-only.
-- Modify: `LAB_WORKFLOW_READINESS_ROADMAP.md`
+- Modify: `docs/maintainers/LAB_WORKFLOW_READINESS_ROADMAP.md`
   - Update Batch/export handoff candidate notes with the observed evidence trigger and non-goal boundary.
 
 ## Task 1: Inventory Sampling Handoff Signals
@@ -171,7 +171,7 @@ Expected: the report shows checksum-aware invalid CAS counts, missing source-nam
 
 - [x] **Step 3: Update state docs without raw private rows**
 
-Update `NEXT_PRODUCT_WORK.md` and `LAB_WORKFLOW_READINESS_ROADMAP.md` with:
+Update `docs/maintainers/NEXT_PRODUCT_WORK.md` and `docs/maintainers/LAB_WORKFLOW_READINESS_ROADMAP.md` with:
 
 - source: owner-selected Organic CSV in Downloads as an example/probe only;
 - affected job: user-facing batch handoff clarity evidence, not upstream

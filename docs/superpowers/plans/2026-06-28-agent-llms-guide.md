@@ -14,7 +14,7 @@
 
 - Closed endpoint slice: `GET /api/agent/label-summary?q=<CAS-or-name>` is available through OpenAPI.
 - Accepted scope decision: `docs/superpowers/plans/2026-06-28-agent-ready-api-scope-decision.md`
-- `LAB_WORKFLOW_READINESS_ROADMAP.md` lists an agent-facing guide such as `llms.txt` as a later concrete work item after the safety/scope decision.
+- `docs/maintainers/LAB_WORKFLOW_READINESS_ROADMAP.md` lists an agent-facing guide such as `llms.txt` as a later concrete work item after the safety/scope decision.
 
 ## Scope
 
@@ -37,8 +37,8 @@ This slice must not add:
 ### Task 1: Open The Guide Slice
 
 **Files:**
-- Modify: `NEXT_PRODUCT_WORK.md`
-- Modify: `PROJECT_STATUS_AND_NEXT_PLAN.md`
+- Modify: `docs/maintainers/NEXT_PRODUCT_WORK.md`
+- Modify: `docs/maintainers/PROJECT_STATUS_AND_NEXT_PLAN.md`
 
 - [ ] Close the Agent label summary endpoint v0 slice with local and remote proof.
 - [ ] Make the `/llms.txt` guide slice active.

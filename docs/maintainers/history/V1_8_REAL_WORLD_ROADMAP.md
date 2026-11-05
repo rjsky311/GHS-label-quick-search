@@ -1048,7 +1048,7 @@ At that point, the roadmap has moved from planning into concrete product expansi
 | M3 Tier 2 — Operational Prepared Workflow | **done** | #15 (PR-1 operational fields) / #16 (PR-2A recent) / #17 (PR-2B saved presets) / #19 (PR-3 derived preview, Option A); final merge SHA `456e376` |
 | M4-style Print workflow — supplier/lab profile, label-stock presets, small-container/compact modes, QR/SDS convenience, live preview, recent print reload | **substantially landed in v1.10** | `42f77b8`, `7657a1a`, `1888964`, `31c8a18`, `51cdb11` |
 | Pilot/workspace persistence — admin dashboard, dictionary growth, aliases, reference links, optional prepared/print/lab-profile workspace documents | **landed in v1.10; public builds are local-only by default, workspace sync and dictionary miss capture are opt-in** | `1e11586`, `0b68579`, `7807b84`, `395273e`, `55dbcd4` |
-| Productized free-tool redesign — light-first UI, brand utility strategy, soft CTA boundaries | **new active direction** | see `DESIGN.md`, `BRANDED_UTILITY_STRATEGY.md`, `REDESIGN_ROADMAP.md` |
+| Productized free-tool redesign — light-first UI, brand utility strategy, soft CTA boundaries | **new active direction** | see `DESIGN.md`, `REDESIGN_ROADMAP.md` |
 | S-level / N-level items | proposed, to be re-triaged after redesign | |
 
 Runtime is now `1.10.0`. `frontend/package.json`, `frontend/src/constants/version.js`, `backend/server.py` `APP_VERSION`, and the Footer test pin are aligned. The frontend is Vite/npm based; use `npm test -- --runInBand` and `npm run build`, not CRACO commands.
