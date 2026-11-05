@@ -1,6 +1,6 @@
 # Case Study: GHS Label Quick Search
 
-A chemist-run, agent-built safety utility in production.
+A chemist-run, agent-built, safety-adjacent lookup and labeling utility.
 
 ## The problem
 
@@ -53,7 +53,7 @@ stay under the owner's control.
   UI, PDF canary) pass. If only the upstream data source is down, QA reports
   that separately. CORS and security headers are checked on the live site.
 - **Work opens only from evidence.** A new piece of work needs a concrete
-  trigger (a user report, a failed QA run, a review finding) and a stated stop
+  trigger (a bug the owner hit, a failed QA run, a review finding) and a stated stop
   condition, so agents do not keep building by momentum.
 
 ## Limits
