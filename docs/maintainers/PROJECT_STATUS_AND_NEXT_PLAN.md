@@ -280,9 +280,7 @@ evidence gap because the upstream GHS endpoint returned HTTP 503. Production
 QA now records the bounded rendered retry contract as
 `external-upstream-unavailable`, keeps exact-SHA health/bundle/PDF gates hard,
 and stops downstream product walks that cannot run without source data. The
-full migration record is
-`docs/evidence/2026-09-08-platform-migration-preparation.md`. The migration
-source-promotion gate remains self-validating: accepted production must expose
+migration source-promotion gate remains self-validating: accepted production must expose
 the same full SHA as `origin/main` through both canonical health surfaces.
 
 Data Correction / Admin no-op audit checkpoint (2026-09-08): the local pilot

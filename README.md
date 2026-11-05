@@ -14,7 +14,7 @@ not as a legal compliance authority.
 - Backend health: https://ghs-api.yuchelab.com/api/health
 - Current runtime version: `1.10.0`
 - Deployment: Cloudflare Pages frontend and Railway backend, accepted only
-  when both report the exact `origin/main` SHA
+  when both report the expected runtime commit
 
 ## How It Is Built
 
@@ -28,8 +28,9 @@ a second agent reviews and verifies each release.
 - 371 backend test functions and about 1,300 frontend test cases, plus docs,
   i18n-parity, bundle-budget, and print-contract checks in CI.
 - A release is accepted only when the frontend build and the backend health
-  endpoint report the same full `origin/main` commit and the production QA
-  scripts (health, search UI, PDF canary) pass.
+  endpoint report the same full commit, the latest on `main` that changes the
+  runtime, and the production QA scripts (health, search UI, PDF canary) pass.
+  If only the upstream data source is down, QA reports that separately.
 - Safety rules are written as contracts first and then enforced by tests; for
   example, printing is blocked when a required GHS pictogram fails to load
   (see [PRINT_LABEL_CONTRACT.md](./PRINT_LABEL_CONTRACT.md)).

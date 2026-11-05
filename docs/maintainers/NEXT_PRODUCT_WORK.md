@@ -152,8 +152,7 @@ Shipped: `POST /api/print/pdf` (hardened Chromium render of the exact print
 HTML), frontend `exportLabelsPdf` with shared preflight gating and a
 mobile-primary 下載 PDF handoff, CJK glyph-standard fixes (document `lang` +
 fontconfig), and the Zeabur pinned-Dockerfile deployment fix (see `AGENTS.md`
-runtime notes). Evidence: local, container, and production renders archived in
-`qa/evidence/2026-07-07-mobile-pdf-export-render-proof/`; the production
+runtime notes). Evidence: local, container, and production renders; the production
 endpoint returned 200 with byte-identical output to the container proof; CI
 and Production Print QA are green. Monitoring: watch `pdf_export_*`
 observability events, Railway build/runtime behavior for the 2.6 GB backend
