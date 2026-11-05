@@ -1,8 +1,10 @@
 # GHS Label Quick Search - Agent Bootstrap
 
-Use this file as the fast project orientation for Codex sessions. The
-canonical planning entry point is `PROJECT_STATUS_AND_NEXT_PLAN.md`; read it
-before choosing the next autonomous product slice.
+Use this file as the fast project orientation for coding-agent sessions. The
+canonical planning entry point is
+`docs/maintainers/PROJECT_STATUS_AND_NEXT_PLAN.md` (indexed with the other
+maintainer notes in `docs/maintainers/README.md`); read it before choosing the
+next autonomous product slice.
 
 ## Project Overview
 
@@ -38,6 +40,8 @@ before choosing the next autonomous product slice.
 
 ## Planning And Scope Selection
 
+All files below live in `docs/maintainers/` unless a path is given.
+
 - Read `PROJECT_STATUS_AND_NEXT_PLAN.md` first.
 - `LAB_WORKFLOW_READINESS_ROADMAP.md` is the current next-phase roadmap while
   physical printing remains deferred; its first recommended slice is Prepared
@@ -47,17 +51,13 @@ before choosing the next autonomous product slice.
   priority selector.
 - `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` is shipped/monitoring, not an open
   implementation target.
-- `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` is the current print-product contract.
+- `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` is the current print-product contract;
+  `PRINT_LABEL_CONTRACT.md` (repository root) holds the safety boundaries.
 - `PRODUCT_REQUIREMENTS_DECISIONS.md` pins current product decisions.
-- `PRODUCT_SCOPE_GATE.md` defines the project-level "grill me" scope gate for
-  broad or ambiguous product changes.
-- `PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md` defines planned role-based
-  scenario gates and safe external survey-research usage.
-- `PERSONA_SURVEY_REVIEW_PACKET.md` is the safe external review prompt packet.
-- `CLAUDE_DESIGN_ADOPTION_PLAN.md` filters Claude Design handoffs before UI
-  implementation; do not apply Claude mock code directly.
-- `MAC_MIGRATION_HANDOFF.md` defines the Windows-to-Mac setup and context
-  preservation checklist.
+- `PRODUCT_SCOPE_GATE.md` defines the project-level scope gate for broad or
+  ambiguous product changes.
+- External design or research output is advisory only; never apply mock code
+  directly or treat it as product, data, or print-safety authority.
 - Open a new slice only from concrete evidence: user screenshot/PDF/Excel,
   production QA failure, CI/deployment failure, admin queue evidence, export
   handoff confusion, or a code-review finding.
@@ -141,7 +141,7 @@ Important backend areas:
 
 Run frontend commands from `frontend/`:
 
-```powershell
+```bash
 npm test -- --runInBand
 npm run test:i18n
 npm run test:docs
@@ -160,15 +160,15 @@ npm run qa:production-product
 
 Run backend commands from `backend/`:
 
-```powershell
+```bash
 python -m py_compile server.py api_models.py api_validation.py export_helpers.py h_code_translations.py h_code_coverage_audit.py
 python -m pytest -q
-python scripts\audit_p_code_coverage.py --fail-on-gaps
-python scripts\audit_h_code_coverage.py --fail-on-gaps
-python scripts\audit_inventory_workbook.py <path-to-xlsx>
-python scripts\audit_inventory_workbook.py <path-to-xlsx> --handoff-dir <output-dir>
-python scripts\import_inventory_handoff.py <handoff-dir-or-audit-json>
-python scripts\import_inventory_handoff.py <handoff-dir-or-audit-json> --apply
+python scripts/audit_p_code_coverage.py --fail-on-gaps
+python scripts/audit_h_code_coverage.py --fail-on-gaps
+python scripts/audit_inventory_workbook.py <path-to-xlsx>
+python scripts/audit_inventory_workbook.py <path-to-xlsx> --handoff-dir <output-dir>
+python scripts/import_inventory_handoff.py <handoff-dir-or-audit-json>
+python scripts/import_inventory_handoff.py <handoff-dir-or-audit-json> --apply
 python scripts/audit_seed_dictionary_identity.py --output-dir <dir> --checkpoint <file>
 python scripts/audit_dictionary_resolution.py <dir>
 ```
@@ -198,15 +198,15 @@ and never holds a classification. Flagged rows that are right anyway go in
 
 Docs-only baseline:
 
-```powershell
+```bash
 git diff --check
 ```
 
 When verifying production freshness, set the expected SHA:
 
-```powershell
-$env:PRODUCTION_HEALTH_EXPECTED_GIT_SHA=(git rev-parse HEAD)
-npm run qa:production-health
+```bash
+cd frontend
+PRODUCTION_HEALTH_EXPECTED_GIT_SHA=$(git rev-parse HEAD) npm run qa:production-health
 ```
 
 ## Critical Safety Lessons

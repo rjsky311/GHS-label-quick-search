@@ -294,7 +294,8 @@ test("automatic production QA skips only known non-runtime change sets", () => {
   assert.equal(classify(), "run");
   assert.equal(
     classify(
-      "PROJECT_STATUS_AND_NEXT_PLAN.md",
+      "README.md",
+      "docs/maintainers/PROJECT_STATUS_AND_NEXT_PLAN.md",
       "docs/evidence/checkpoint.md",
       ".github/workflows/production-print-qa.yml",
       "backend/test_pilot_storage.py",
@@ -349,7 +350,7 @@ test("production freshness target tolerates only non-runtime commits after the d
       "frontend/package.json",
       packageJson({ build: "vite build", "test:qa-scripts": "node --test a" }, { react: "19.0.0" }),
     );
-    const docsOnly = commitFile("PROJECT_STATUS_AND_NEXT_PLAN.md", "status\n");
+    const docsOnly = commitFile("docs/maintainers/PROJECT_STATUS_AND_NEXT_PLAN.md", "status\n");
     const workflowOnly = commitFile(".github/workflows/ci.yml", "name: CI\n");
     const testScriptOnly = commitFile(
       "frontend/package.json",
@@ -400,6 +401,7 @@ test("retired Zeabur deployment artifacts cannot silently return", () => {
   const retiredPaths = [
     "zeabur.yaml",
     "zbpack.ghs-frontend.json",
+    "zbpack.ghs-backend.json",
     "Dockerfile.ghs-frontend",
     "backend/scripts/check_inline_dockerfile_parity.py",
     "backend/test_inline_dockerfile_parity.py",

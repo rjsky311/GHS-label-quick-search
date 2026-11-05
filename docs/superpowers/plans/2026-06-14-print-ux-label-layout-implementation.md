@@ -15,7 +15,7 @@
 Implement against:
 
 - `docs/superpowers/specs/2026-06-14-print-ux-label-layout-decision-design.md`
-- `SIMPLIFIED_LABEL_OUTPUT_MODEL.md`
+- `docs/maintainers/SIMPLIFIED_LABEL_OUTPUT_MODEL.md`
 - `PRINT_LABEL_CONTRACT.md`
 
 Current resolved product decisions:

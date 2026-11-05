@@ -1,6 +1,6 @@
 # Case Study: GHS Label Quick Search
 
-A chemist-run, agent-built safety utility in production.
+A chemist-run, agent-built, safety-adjacent lookup and labeling utility.
 
 ## The problem
 
@@ -40,7 +40,7 @@ The project started in January 2026 on an AI app builder and was moved to a
 self-owned React + FastAPI stack so that the code, the data, and the hosting
 stay under the owner's control.
 
-## Engineering practices that made it safe to let agents write code
+## Print checks and release verification
 
 - **Contracts before code.** Safety rules live in plain documents
   ([PRINT_LABEL_CONTRACT.md](../PRINT_LABEL_CONTRACT.md),
@@ -51,11 +51,12 @@ stay under the owner's control.
   test cases, plus checks for docs drift, English/Chinese text parity, bundle
   size, and the print contract, all in CI.
 - **Evidence-gated releases.** A release counts only when the frontend build and
-  the backend health endpoint both report the same full `origin/main` commit,
-  and the production QA scripts (health, search UI, PDF canary) pass. CORS and
-  security headers are checked on the live site.
+  the backend health endpoint both report the same full commit, the latest on
+  `main` that changes the runtime, and the production QA scripts (health, search
+  UI, PDF canary) pass. If only the upstream data source is down, QA reports
+  that separately. CORS and security headers are checked on the live site.
 - **Work opens only from evidence.** A new piece of work needs a concrete
-  trigger (a user report, a failed QA run, a review finding) and a stated stop
+  trigger (a bug the owner hit, a failed QA run, a review finding) and a stated stop
   condition, so agents do not keep building by momentum.
 
 ## Limits
@@ -67,4 +68,5 @@ stay under the owner's control.
 
 ## Code
 
-This repository. MIT License.
+This repository. MIT License. Planning, status, and QA notes for maintainers
+are indexed in [docs/maintainers/](./maintainers/README.md).

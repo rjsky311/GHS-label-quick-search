@@ -7,7 +7,7 @@ checkpoint.
 ## Source
 
 - Original finding:
-  `POST_DEPLOY_QA_CHECKPOINT_2026_06_21.md`
+  `docs/maintainers/history/POST_DEPLOY_QA_CHECKPOINT_2026_06_21.md`
 - Fix commits:
   - `9f868deda22626e6def370d93baf151c66cdba55`
     (`Cover H-code wording variants`)

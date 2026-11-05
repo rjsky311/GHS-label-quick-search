@@ -13,7 +13,7 @@
 ## Evidence Source
 
 - Accepted scope decision: `docs/superpowers/plans/2026-06-28-agent-ready-api-scope-decision.md`
-- Live queue candidate: `NEXT_PRODUCT_WORK.md` names `Agent-readable label summary contract v0 design/fixtures` as the next bounded slice after scope-decision verification.
+- Live queue candidate: `docs/maintainers/NEXT_PRODUCT_WORK.md` names `Agent-readable label summary contract v0 design/fixtures` as the next bounded slice after scope-decision verification.
 - Existing public data shape: `backend/api_models.py` exposes `ChemicalResult`, including identity, GHS pictograms, H/P statements, signal word, source metadata, alternate classifications, cache/upstream flags, and reference links.
 - Existing QR contract: print tests assert the site lookup target uses `/?cas=<cas-number>` with `data-qr-target-type="ghs-lookup"`.
 
@@ -40,8 +40,8 @@ This slice must not add:
 ### Task 1: Open The Contract Slice In The Live Queue
 
 **Files:**
-- Modify: `NEXT_PRODUCT_WORK.md`
-- Optionally modify: `PROJECT_STATUS_AND_NEXT_PLAN.md`
+- Modify: `docs/maintainers/NEXT_PRODUCT_WORK.md`
+- Optionally modify: `docs/maintainers/PROJECT_STATUS_AND_NEXT_PLAN.md`
 
 - [ ] Record the completed Agent-Ready API Scope Decision with local and remote proof.
 - [ ] Make `Agent-readable label summary contract v0 design/fixtures` the active slice.

@@ -40,7 +40,7 @@ not approval, and not compliance advice.
 
 ## Project Context
 
-- [Project status and next plan](https://github.com/rjsky311/GHS-label-quick-search/blob/main/PROJECT_STATUS_AND_NEXT_PLAN.md):
+- [Project status and next plan](https://github.com/rjsky311/GHS-label-quick-search/blob/main/docs/maintainers/PROJECT_STATUS_AND_NEXT_PLAN.md):
   current roadmap state.
 - [Data governance and safety boundaries](https://github.com/rjsky311/GHS-label-quick-search/blob/main/DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md):
   reviewed-data and authority boundaries.

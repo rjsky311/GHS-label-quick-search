@@ -4,8 +4,8 @@
   "startedAt": "2026-06-21T11:03:45.412Z",
   "finishedAt": "2026-06-21T11:10:00.959Z",
   "productionUrl": "https://ghs-frontend.zeabur.app/",
-  "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-qa-report.json",
-  "handoffReportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-print-smoke-report.json",
+  "reportPath": "frontend/build/print-qa-report.json",
+  "handoffReportPath": "frontend/build/production-print-smoke-report.json",
   "executablePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
   "headless": true,
   "caseTimeoutMs": 180000,
@@ -57,7 +57,7 @@
       "statusText": "Print handoff ready: complete-primary; GHS04,GHS05,GHS06,GHS07",
       "evidence": {
         "requiredIdentityTextInPreview": true,
-        "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-print-smoke-screenshots/a4-primary.png",
+        "screenshotPath": "frontend/build/production-print-smoke-screenshots/a4-primary.png",
         "previewPageControlsVisible": false,
         "nextPreviewPageChanged": true,
         "nextPreviewInspection": null,
@@ -455,7 +455,7 @@
       "statusText": "先補齊負責單位資訊 missing print-label-action",
       "evidence": {
         "requiredIdentityTextInPreview": true,
-        "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-print-smoke-screenshots/a4-primary-profile-blocked.png",
+        "screenshotPath": "frontend/build/production-print-smoke-screenshots/a4-primary-profile-blocked.png",
         "previewPageControlsVisible": false,
         "nextPreviewPageChanged": true,
         "nextPreviewInspection": null,
@@ -794,7 +794,7 @@
       "statusText": "Print handoff ready: complete-primary; GHS04,GHS05,GHS06,GHS07",
       "evidence": {
         "requiredIdentityTextInPreview": true,
-        "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-print-smoke-screenshots/letter-primary.png",
+        "screenshotPath": "frontend/build/production-print-smoke-screenshots/letter-primary.png",
         "previewPageControlsVisible": false,
         "nextPreviewPageChanged": true,
         "nextPreviewInspection": null,
@@ -1224,7 +1224,7 @@
       "statusText": "Print handoff ready: complete-primary; GHS02,GHS04,GHS05,GHS06,GHS07,GHS08",
       "evidence": {
         "requiredIdentityTextInPreview": true,
-        "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-print-smoke-screenshots/ethylene-oxide-a4-primary-continuation.png",
+        "screenshotPath": "frontend/build/production-print-smoke-screenshots/ethylene-oxide-a4-primary-continuation.png",
         "previewPageControlsVisible": true,
         "nextPreviewPageChanged": true,
         "nextPreviewInspection": {
@@ -1769,7 +1769,7 @@
       "statusText": "Print handoff ready: quick-id; GHS04,GHS05,GHS06,GHS07",
       "evidence": {
         "requiredIdentityTextInPreview": true,
-        "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-print-smoke-screenshots/tube-vial-quick-id.png",
+        "screenshotPath": "frontend/build/production-print-smoke-screenshots/tube-vial-quick-id.png",
         "previewPageControlsVisible": false,
         "nextPreviewPageChanged": true,
         "nextPreviewInspection": null,
@@ -2181,7 +2181,7 @@
       "statusText": "Print handoff ready: qr-supplement; GHS04,GHS05,GHS06,GHS07",
       "evidence": {
         "requiredIdentityTextInPreview": true,
-        "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-print-smoke-screenshots/brother-62mm-qr-supplement.png",
+        "screenshotPath": "frontend/build/production-print-smoke-screenshots/brother-62mm-qr-supplement.png",
         "previewPageControlsVisible": false,
         "nextPreviewPageChanged": true,
         "nextPreviewInspection": null,

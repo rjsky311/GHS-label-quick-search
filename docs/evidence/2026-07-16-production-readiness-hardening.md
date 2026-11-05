@@ -35,16 +35,13 @@ review-only data into public dictionary authority.
 - GitHub Dependabot open alerts: **0**. Secret-scanning open alerts: **0**.
   Code scanning was not configured and returned 404 rather than a clean scan.
 
-The machine-wide artifact-first `second-opinion` harness reviewed the public
-whole-branch diff twice through the company LiteLLM `gemini-3.5-flash` route.
+A second model (Gemini) reviewed the public whole-branch diff twice.
 The first pass produced four Important candidates; primary verification
 rejected three and reproduced one transaction-consistency defect. The defect
 was fixed test-first so alias commits roll back cleanly and in-memory version
 state advances only after commit. The focused second pass reported no
-unresolved Critical or Important issue. Reports remain outside the repository:
-
-- `<owner-setup-notes>/reports/second-opinions/20260716-140731-litellm-company-code-review.md`
-- `<owner-setup-notes>/reports/second-opinions/20260716-141624-litellm-company-code-review.md`
+unresolved Critical or Important issue. The reports are kept outside the
+repository.
 
 No Claude second-opinion route was used.
 

@@ -210,7 +210,7 @@
     "text": "Print handoff ready: complete-primary; GHS02,GHS07,GHS04,GHS05,GHS06,GHS08,GHS03,GHS09"
   },
   "dialogMessages": [],
-  "screenshotDir": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-batch-print-screenshots",
+  "screenshotDir": "frontend/build/production-batch-print-screenshots",
   "allowExternalUpstreamDegradedPass": false,
   "warnings": [],
   "failures": []

@@ -41,5 +41,5 @@ screen and simplified print workflow checkpoint.
 
 This is visual and workflow evidence. It does not validate physical print
 quality, printer scaling, thermal output, QR scan reliability, or actual
-label-stock readability. Use `PHYSICAL_PRINT_VALIDATION_CHECKLIST.md` for the
+label-stock readability. Use `docs/maintainers/PHYSICAL_PRINT_VALIDATION_CHECKLIST.md` for the
 real-material validation pass.

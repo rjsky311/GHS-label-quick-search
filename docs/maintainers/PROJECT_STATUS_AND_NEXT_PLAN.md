@@ -1,5 +1,50 @@
 # Project Status And Next Plan
 
+## Release checkpoint — 2026-11-05 (`d5cd926`)
+
+Runtime release for #87: names resolve only to that compound, prepared-solution
+labels carry the solvent's hazards and no gas-container hazards, container labels
+keep every H code ranked by severity, and `follow-redirects` moves to 1.16.2.
+Before release, production returned the wrong compound for common names (`HCl`
+returned Tris HCl, `dichloromethane` a palladium complex, `gold` gold trichloride,
+`methane` methanesulfonic acid, `lead` lead tetraacetate). Released under the
+manual provider-native model with the owner's authorization; release and
+acceptance by Claude.
+
+- Release SHA: `d5cd926bad4eb709e1271c502943eaed61e06319` (equal to `main` at
+  release time).
+- Frontend: Cloudflare Pages `ghs-label-quick-search-shadow` Direct Upload,
+  production deployment `411028e7-b142-441d-8943-9ad6c48d496a`, Node v22.23.1
+  and npm 11.6.2 from a clean clone, same origins and feature flags. After upload
+  all 45 servable files on both the canonical and Pages domains match the verified
+  build (`index.html` compared at `/`, because `/index.html` redirects there).
+- Backend: Railway `ghs-backend` native deploy
+  `fc6c65ff-b335-43ec-a880-795ff5d637c9` (`railway up` from the clean clone after
+  setting `BUILD_GIT_SHA` with `--skip-deploys`, so only one deployment was
+  created).
+- Rollback references: frontend `88df4e56-6eb5-48a8-8829-d7331fa0a939`, backend
+  `f0daedc9-afbf-43cd-ab06-824cb2d79268` (SHA `ac2a88a`).
+- Acceptance: both `build-info.json` and `/api/health` report the release SHA;
+  health `healthy`/`ready`, PDF available; `qa:production-health` and
+  `qa:production-pdf-canary` passed; CORS allows only the canonical and Pages
+  origins (`https://evil.example` gets 400 without allow-origin); security headers
+  present on both origins. The five queries above now return the right compound,
+  through the API and, for `HCl`, through the production UI.
+- Manual Production Print QA in product mode, run `41966468116`, passed end to end
+  (19/19 steps), including the freshness gate; the post-merge run `41966086681`
+  also passed.
+- Known QA script limit: run from macOS, `qa:production-smoke` fails
+  `ethylene-oxide-a4-primary-continuation` on
+  `preview-next-critical-elements-visible`. The check inspects page 2 right after
+  `srcdoc` changes, and `waitForPreviewImagesReady` still sees the old document, so
+  some pictograms read as not ready. With a 3-second wait the case passes, and the
+  production UI shows all 6 pictograms on page 2. The Linux runners are unaffected.
+  The script is unchanged in this release.
+- Behaviour to expect: merged solvent hazards add content, so some label and stock
+  combinations now stop and ask for a larger label instead of printing.
+- Physical printing remains unverified. Dependabot #70 (`follow-redirects`) is
+  addressed by the lockfile update in this release.
+
 ## Release checkpoint — 2026-11-01 (`ac2a88a`)
 
 Runtime release for #83 (pypdf 6.21.2 → 6.21.4; CVE-2026-119203 to
@@ -130,7 +175,7 @@ the backend deploys natively rather than from GitHub, so Railway's GitHub token
 reset does not affect it. Decision: change nothing, because a variable change
 triggers a redeploy and Railway warns that redeploying pre-incident builds
 fails. `/api/health` was healthy at `4c04559`
-on 2026-10-23. Tracking: `Mac mini設置/Railway安全通報-換鑰匙清單-20261023.md`.
+on 2026-10-23.
 
 ## Release checkpoint — 2026-10-09 (`4c04559`)
 
@@ -280,9 +325,7 @@ evidence gap because the upstream GHS endpoint returned HTTP 503. Production
 QA now records the bounded rendered retry contract as
 `external-upstream-unavailable`, keeps exact-SHA health/bundle/PDF gates hard,
 and stops downstream product walks that cannot run without source data. The
-full migration record is
-`docs/evidence/2026-09-08-platform-migration-preparation.md`. The migration
-source-promotion gate remains self-validating: accepted production must expose
+migration source-promotion gate remains self-validating: accepted production must expose
 the same full SHA as `origin/main` through both canonical health surfaces.
 
 Data Correction / Admin no-op audit checkpoint (2026-09-08): the local pilot
@@ -398,23 +441,16 @@ changing product direction, label-printing models, data trust boundaries,
 workflow simplification, or multi-surface UX behavior when the acceptance
 standard is not already clear.
 
-Persona integration and survey research:
-`PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md` defines how to turn
-role-based workflows into scenario gates and how to use external survey
-simulation as product-research input without treating it as GHS correctness or
-compliance validation. `PERSONA_SURVEY_REVIEW_PACKET.md` is the sanitized
-packet to use before uploading prompts or screenshots to LINER or another
-external review tool. `LINER_SURVEY_2026_06_02_FINDINGS.md` records the first
-external survey dataset and the bounded Batch Review Self-Service Clarity slice
-opened from that evidence.
+Persona integration: role-based workflows are pinned as scenario gates in
+`frontend/src/__tests__/persona*.integration.test.js`. Simulated or external
+survey feedback is product-research input only; it is never GHS correctness,
+SDS, legal, or compliance validation. The first simulated survey opened the
+bounded Batch Review Self-Service Clarity slice, and its write-up is no longer
+kept in this repository.
 
-External design exploration: `CLAUDE_DESIGN_UI_REVIEW_PACKET.md` is the
-sanitized Claude Design upload/prompt packet for UI hierarchy, design-system,
-and implementation-handoff exploration. Use it only for design critique and
-handoff; do not treat Claude Design output as GHS, SDS, legal, data-trust, or
-print-safety authority. `CLAUDE_DESIGN_ADOPTION_PLAN.md` filters downloaded
-Claude Design handoffs into Adopt / Adapt / Reject / Needs Discussion before
-any product UI implementation. Do not apply Claude Design mock code directly.
+External design exploration: output from an external design tool is advisory
+input for UI hierarchy and handoff language only. It is not GHS, SDS, legal,
+data-trust, or print-safety authority, and mock code is never applied directly.
 
 Production UI checkpoint: `PRODUCTION_UI_CHECKPOINT_2026_06_18.md` records
 the shipped experiment-notebook main-screen and simplified print-workflow
@@ -422,10 +458,6 @@ polish baseline, the deployed SHA, green production QA, and the visual
 acceptance screenshot package. Treat that slice as closed unless fresh
 screenshot, PDF, physical-print, CI/deployment, or admin/export evidence opens
 a concrete new issue.
-
-Migration handoff: `MAC_MIGRATION_HANDOFF.md` records how to preserve project
-context in GitHub and resume development on the Mac mini M4 without committing
-local secrets, generated files, ignored databases, or temporary design zips.
 
 Proactive insight habit: `AUTONOMOUS_WORKFLOW.md` requires each meaningful
 work slice to surface newly noticed blind spots, repeated-fix patterns,
@@ -1557,10 +1589,9 @@ Current status:
   on phone-width viewports, keeping chemical identity, GHS pictograms, signal
   word, detail action, and SDS action inside the viewport instead of requiring
   horizontal table scrolling.
-- Brand/support boundaries are now pinned in `BRANDED_UTILITY_STRATEGY.md`:
-  conversion surfaces must stay outside GHS icons, signal words, H/P
-  statements, SDS authority copy, blocked-output warnings, and printed label
-  bodies.
+- Brand/support boundaries stay explicit: conversion surfaces must stay outside
+  GHS icons, signal words, H/P statements, SDS authority copy, blocked-output
+  warnings, and printed label bodies.
 - The detail modal's same-chemical classification comparison uses readable
   stacked cards on narrow viewports instead of a desktop-width comparison
   table, so alternate GHS reports can be inspected without horizontal dragging.
@@ -1662,20 +1693,11 @@ Use these files by role:
 
 - `AGENTS.md`: project context, architecture, current runtime state, and
   session bootstrap guidance.
-- `CLAUDE.md`: short compatibility entry point that delegates to `AGENTS.md`,
-  this file, `AUTONOMOUS_WORKFLOW.md`, and the future tracker.
+- `CLAUDE.md`: short compatibility entry point that delegates to `AGENTS.md`.
 - `AUTONOMOUS_WORKFLOW.md`: standing approval, default work loop, stop
   conditions, and verification rules.
 - `PRODUCT_SCOPE_GATE.md`: project-level scope alignment workflow for broad
   product decisions and repeated rework risks.
-- `PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md`: planned persona-based
-  integration and survey-research owner doc for role-level workflow validation
-  beyond feature/block QA gates.
-- `PERSONA_SURVEY_REVIEW_PACKET.md`: safe external review packet with persona
-  prompts, screenshot checklist, output schema, and research-to-backlog rules.
-- `LINER_SURVEY_2026_06_02_FINDINGS.md`: first LINER survey findings, role
-  coverage, quantified signals, and the evidence-bounded batch review clarity
-  decision.
 - Repository hygiene, code splitting, the Batch-First handoff/export closure
   scope, and the Batch-First closure-audit patch have reviewable scopes.
   Future work should start from a new evidence-driven slice rather than
@@ -1731,6 +1753,6 @@ Use these files by role:
   history, not the active user-facing print model.
 - `NEXT_PRINT_WORKSTREAMS.md`: completed print workstream baseline; supporting
   history, not the active live queue.
-- `DESIGN.md`, `BRANDED_UTILITY_STRATEGY.md`, and `REDESIGN_ROADMAP.md`:
-  productized utility design direction; supporting history for the
-  shipped/monitoring Batch-First baseline and future evidence-driven slices.
+- `DESIGN.md` and `REDESIGN_ROADMAP.md`: productized utility design direction;
+  supporting history for the shipped/monitoring Batch-First baseline and future
+  evidence-driven slices.

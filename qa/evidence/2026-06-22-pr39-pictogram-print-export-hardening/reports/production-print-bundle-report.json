@@ -4,7 +4,7 @@
   "productionUrl": "https://ghs-frontend.zeabur.app/",
   "htmlUrl": "https://ghs-frontend.zeabur.app/?printQaBundleCheck=1782061289823",
   "assetUrl": "https://ghs-frontend.zeabur.app/assets/index-BoN1YhVb.js",
-  "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-print-bundle-report.json",
+  "reportPath": "frontend/build/production-print-bundle-report.json",
   "maxAttempts": 3,
   "timeoutMs": 10000,
   "retryDelayMs": 750,
