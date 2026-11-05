@@ -2816,7 +2816,13 @@ try {
   if (mobileDecisionVerticalRisks.length > 0) {
     failures.push("mobile-read-first-decision-guide-vertical-text");
   }
-  if (!/Hydrochloric acid|鹽酸|Hydrochloric Acid/.test(mobileReadFirst.rowText)) {
+  // 7647-01-0 is labelled "Hydrogen chloride / 氯化氫" since 2026-11-04;
+  // the old names stay accepted until production has the rename.
+  if (
+    !/Hydrogen chloride|氯化氫|Hydrochloric acid|鹽酸|Hydrochloric Acid/.test(
+      mobileReadFirst.rowText,
+    )
+  ) {
     failures.push("mobile-read-first-result-identity-missing");
   }
 

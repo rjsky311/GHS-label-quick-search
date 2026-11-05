@@ -70,7 +70,11 @@ on making the non-physical workflow clear, trustworthy, and repeatable.
   label, QR small label, and Identification small label.
 - Do not add H/P text to small labels without a new product decision.
 - Prepared-solution labels must copy a selected single parent chemical's hazard
-  data and clearly say they do not reclassify the mixture.
+  data and clearly say they do not reclassify the mixture. When the solvent is
+  not water, the solvent's looked-up pictograms and H/P statements are added by
+  union (stronger signal word kept); a solvent that cannot be confirmed prints
+  "Solvent hazards not included". (2026-11-04: solvent hazards were previously
+  ignored, which under-labelled solutions in flammable or toxic solvents.)
 - Concentration, solvent, dilution, prepared-by, prepared-date, and expiry
   metadata must not infer, reduce, weaken, or modify hazards.
 - No user, admin, external service, or coding agent may write unapproved data

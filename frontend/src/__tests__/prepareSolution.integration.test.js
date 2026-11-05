@@ -943,3 +943,133 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
     ).toBeInTheDocument();
   });
 });
+
+describe("prepared solution in a solvent other than water (App integration)", () => {
+  const methanolResult = {
+    cas_number: "67-56-1",
+    cid: 887,
+    name_en: "Methanol",
+    name_zh: "甲醇",
+    found: true,
+    ghs_pictograms: [{ code: "GHS02" }, { code: "GHS06" }, { code: "GHS08" }],
+    hazard_statements: [
+      { code: "H225", text_en: "Highly flammable liquid and vapour" },
+      { code: "H301", text_en: "Toxic if swallowed" },
+      { code: "H311", text_en: "Toxic in contact with skin" },
+      { code: "H331", text_en: "Toxic if inhaled" },
+      { code: "H370", text_en: "Causes damage to organs" },
+    ],
+    precautionary_statements: [{ code: "P210" }],
+    signal_word: "Danger",
+    signal_word_zh: "危險",
+    other_classifications: [],
+  };
+
+  const mockSolventLookup = (resultForQuery) => {
+    axios.get.mockImplementation(async (url, config) => {
+      if (url.endsWith("/api/search-single")) {
+        return { data: resultForQuery(config?.params?.q) };
+      }
+      return { data: { results: [] } };
+    });
+  };
+
+  const solventLookupQueries = () =>
+    axios.get.mock.calls
+      .filter(([url]) => url.endsWith("/api/search-single"))
+      .map(([, config]) => config?.params?.q);
+
+  it("X in methanol: looks methanol up and adds its pictograms and H statements", async () => {
+    render(<App />);
+    await runBatchSearch({
+      casInputs: ["64-17-5"],
+      mockResponses: [ethanolResult],
+    });
+    mockSolventLookup((q) =>
+      q === "Methanol" ? methanolResult : { found: false, cas_number: q },
+    );
+    await enterPrepareFlowFor(ethanolResult);
+    await submitPreparedForm({ concentration: "10 mM", solvent: "Methanol" });
+
+    await waitFor(() =>
+      expect(screen.getAllByText("label.title").length).toBeGreaterThan(0)
+    );
+    expect(solventLookupQueries()).toEqual(["Methanol"]);
+
+    const status = screen.getByTestId(
+      `selected-prepared-solvent-hazards-${ethanolResult.cas_number}`
+    );
+    expect(status).toHaveAttribute("data-solvent-hazard-status", "included");
+
+    const { buildPrintPreviewDocument } = jest.requireMock("@/utils/printLabels");
+    const lastItems =
+      buildPrintPreviewDocument.mock.calls[
+        buildPrintPreviewDocument.mock.calls.length - 1
+      ][0];
+    expect(lastItems).toHaveLength(1);
+    const [prepared] = lastItems;
+    expect(prepared.cas_number).toBe("64-17-5");
+    expect(prepared.ghs_pictograms.map((p) => p.code)).toEqual([
+      "GHS02",
+      "GHS06",
+      "GHS08",
+    ]);
+    expect(prepared.hazard_statements.map((h) => h.code)).toEqual([
+      "H225",
+      "H301",
+      "H311",
+      "H331",
+      "H370",
+    ]);
+    expect(prepared.signal_word).toBe("Danger");
+    expect(prepared.preparedSolution.solventHazards.solventCas).toBe("67-56-1");
+  });
+
+  it("X in methanol (lookup fails): opens the label with a 'not included' warning", async () => {
+    render(<App />);
+    await runBatchSearch({
+      casInputs: ["64-17-5"],
+      mockResponses: [ethanolResult],
+    });
+    axios.get.mockImplementation(async (url) => {
+      if (url.endsWith("/api/search-single")) throw new Error("network down");
+      return { data: { results: [] } };
+    });
+    await enterPrepareFlowFor(ethanolResult);
+    await submitPreparedForm({ concentration: "10 mM", solvent: "Methanol" });
+
+    await waitFor(() =>
+      expect(screen.getAllByText("label.title").length).toBeGreaterThan(0)
+    );
+    expect(
+      screen.getByTestId(
+        `selected-prepared-solvent-hazards-${ethanolResult.cas_number}`
+      )
+    ).toHaveAttribute("data-solvent-hazard-status", "not_included");
+    expect(
+      screen.getAllByText(/Solvent hazards for "Methanol" are not included/)
+        .length
+    ).toBeGreaterThan(0);
+  });
+
+  it("X in water: no solvent lookup and no solvent status line", async () => {
+    render(<App />);
+    await runBatchSearch({
+      casInputs: ["64-17-5"],
+      mockResponses: [ethanolResult],
+    });
+    mockSolventLookup(() => methanolResult);
+    await enterPrepareFlowFor(ethanolResult);
+    await submitPreparedForm({ concentration: "10% (v/v)", solvent: "Water" });
+
+    await waitFor(() =>
+      expect(screen.getAllByText("label.title").length).toBeGreaterThan(0)
+    );
+    expect(solventLookupQueries()).toEqual([]);
+    expect(
+      screen.queryByTestId(
+        `selected-prepared-solvent-hazards-${ethanolResult.cas_number}`
+      )
+    ).not.toBeInTheDocument();
+  });
+});

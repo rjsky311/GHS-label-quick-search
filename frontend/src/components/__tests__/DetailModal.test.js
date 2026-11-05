@@ -896,3 +896,40 @@ describe('DetailModal', () => {
     });
   });
 });
+
+describe("DetailModal substance scope note", () => {
+  it("shows which substance the classification covers for 7647-01-0", () => {
+    render(
+      <DetailModal
+        {...defaultProps}
+        result={{
+          ...mockFoundResult,
+          cas_number: "7647-01-0",
+          name_en: "Hydrogen chloride",
+          name_zh: "氯化氫",
+          substance_notes: [
+            {
+      code: "hydrogen-chloride-includes-gas",
+      text_en:
+        "This GHS classification is for hydrogen chloride (CAS 7647-01-0), including the gas, so it can show gas-only hazards such as GHS04. Hydrochloric acid solution supplier labels are usually GHS05 and GHS07 (H290, H314, H335). The SDS of the bottle in hand governs.",
+      text_zh:
+        "此 GHS 分類是氯化氫（CAS 7647-01-0，含氣體）的分類，可能出現 GHS04 等只適用於氣體的危害。鹽酸水溶液的供應商標籤通常是 GHS05、GHS07（H290、H314、H335）。以手上那瓶的安全資料表（SDS）為準。",
+      source:
+        "Hydrochloric acid solution: CLP Annex VI index 017-002-01-X (H314, H335); H290 from supplier SDS.",
+    },
+          ],
+        }}
+      />
+    );
+    const note = screen.getByTestId("detail-substance-notes");
+    expect(note).toHaveAttribute("role", "note");
+    expect(note.textContent).toContain("substanceNote.title");
+    expect(note.textContent).toContain("hydrogen chloride (CAS 7647-01-0), including the gas");
+    expect(note.textContent).toContain("GHS05 and GHS07 (H290, H314, H335)");
+  });
+
+  it("shows nothing for a result without notes", () => {
+    render(<DetailModal {...defaultProps} />);
+    expect(screen.queryByTestId("detail-substance-notes")).not.toBeInTheDocument();
+  });
+});

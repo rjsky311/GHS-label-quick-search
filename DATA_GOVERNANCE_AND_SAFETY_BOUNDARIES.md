@@ -16,11 +16,12 @@ The app uses multiple data sources with different roles:
 
 | Source | Role | Product treatment |
 | --- | --- | --- |
-| PubChem GHS data | Primary automated hazard lookup | Useful starting point; transient failures must be visible |
+| PubChem GHS data | Primary automated hazard lookup (mostly aggregated ECHA C&L notifications) | Useful starting point; transient failures must be visible; the main report is the one with pictograms and the most company reports |
 | ECHA report/source strings | Preferred regulatory signal when present in PubChem reports | Ranked higher when report count is otherwise tied |
 | Local seed dictionary | Search/name resolution aid | Does not override current GHS hazard data |
 | Manual dictionary entries | Admin-curated search/name resolution aid | Admin-gated; must not be treated as hazard classification authority |
 | Manual reference links | Admin-curated verification aids | Admin-gated; only `http`/`https`; typed as SDS, regulatory, occupational, or reference |
+| Substance scope notes (`backend/substance_scope_notes.py`) | Says which substance the GHS data covers when the everyday name points elsewhere (7647-01-0 is hydrogen chloride including the gas, not hydrochloric acid solution) | Reminder only, shown on results, detail, preview, and complete labels; never adds, removes, or changes pictograms, signal words, or H/P statements; every note cites its source |
 | SDS/supplier/local rules | Final authority for real use | Always mentioned in trust copy as required verification |
 
 Manual entries and aliases can help users find a CAS number. They must not
@@ -195,6 +196,15 @@ Keep these states separate in UI, planner logic, exports, and tests:
 The worst failure mode is silently converting upstream unavailability into
 "no hazards." Treat that as a safety regression.
 
+Prepared-solution solvents follow the same states. When the solvent is not
+water, the app looks it up through the same `/search-single` path; only a
+`found with renderable GHS` result is merged into the parent's data (union of
+pictograms, H and P statements, stronger signal word, nothing reduced for
+dilution, no mixture threshold calculation). Every other state for a
+non-water solvent prints "Solvent hazards not included" on the complete and
+container front labels and shows the same warning in the preview; it is never
+treated as a harmless solvent.
+
 ## 3. Reference Link Policy
 
 Reference links are verification aids. They can appear in detail views and can
@@ -247,8 +257,10 @@ fallback because it has the same role and better priority.
 When sources disagree:
 
 - Do not merge reports into a false certainty.
-- Keep the primary classification selection deterministic:
-  report count, ECHA/source signal, hazard count, then stable source order.
+- Keep the primary classification selection deterministic
+  (`_report_rank_key` in `backend/server.py`): reports with pictograms first,
+  then report count, ECHA/source signal, hazard count, then stable source
+  order.
 - Preserve alternate classifications where available so users can inspect
   differences.
 - Treat "multiple available public classifications" as a primary-selection

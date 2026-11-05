@@ -10,12 +10,19 @@
  *
  * ## Design contract (M3 Tier 1, locked)
  *
- *   1. Single parent chemical only. No mixtures / multi-solute.
+ *   1. Single parent chemical (solute) only. No multi-solute mixtures.
  *   2. Only two user inputs: `concentration` and `solvent`.
- *   3. GHS data is COPIED FROM THE PARENT AS-IS — pictograms,
- *      hazard_statements, precautionary_statements, signal_word,
- *      other_classifications all passed through. Never edited,
- *      never merged, never recomputed.
+ *   3. GHS data starts from the parent as-is. When the solvent is not
+ *      water, the caller looks the solvent up through the normal
+ *      single-search path and passes the result in; a usable result is
+ *      merged by UNION ONLY (see `utils/preparedSolventHazards.js`):
+ *      pictograms, H and P statements combined by code, the stronger
+ *      signal word wins, applied to the primary and every alternate
+ *      classification. Nothing is ever removed, reduced, or recomputed
+ *      for concentration or dilution (no mixture threshold calculation).
+ *      A non-water solvent that cannot be confirmed is recorded as
+ *      `solventHazards.status = "not_included"` and the label prints a
+ *      visible "Solvent hazards not included" warning.
  *   4. Parent's `cas_number` is preserved. We do NOT synthesize a
  *      fake CAS for the mixture. Downstream modules that key off
  *      CAS continue to work; M3 Tier 1 is single-item per print
@@ -44,14 +51,22 @@
  *         preparedBy:    "A. Chen",
  *         preparedDate:  "2026-04-16",
  *         expiryDate:    "2026-10-16",
+ *         // solvent hazard status (always present):
+ *         solventHazards: {
+ *           status: "water" | "included" | "not_included",
+ *           solvent: "Methanol",          // what the user typed
+ *           solventCas: "67-56-1",        // included only
+ *           solventNameEn: "Methanol",    // included only
+ *           solventNameZh: "甲醇",        // included only
+ *         },
  *       }
  *     }
  *
- * The parent fields being carried verbatim is what makes PR-B's
- * print path "just work": `getEffectiveForPrint()` and the four
- * template renderers read `ghs_pictograms` / `hazard_statements` /
- * `precautionary_statements` / `signal_word*` from the item
- * directly, same as a normal chemical.
+ * The parent fields (merged with the solvent's when included) are what
+ * makes PR-B's print path "just work": `getEffectiveForPrint()` and the
+ * four template renderers read `ghs_pictograms` / `hazard_statements` /
+ * `precautionary_statements` / `signal_word*` from the item directly,
+ * same as a normal chemical.
  *
  * ## Operational metadata (Tier 2 PR-1)
  *
@@ -63,6 +78,14 @@
  * rendering must keep that framing (copy on form and label makes it
  * explicit).
  */
+
+import { listGhsClassifications } from "@/utils/selectedGhsClassification";
+import {
+  SOLVENT_HAZARD_STATUS,
+  dropGasContainerHazards,
+  mergeSolventHazardsIntoChemical,
+  resolveSolventHazards,
+} from "@/utils/preparedSolventHazards";
 
 /**
  * Build a prepared-solution derived item from a parent chemical
@@ -80,6 +103,10 @@
  *                            operational fields default to empty and
  *                            are normalised to null on the output
  *                            when blank.
+ * @param {Object} [options]
+ * @param {Object|null} [options.solventResult]  Single-search result for
+ *                            the solvent (null when no lookup ran or it
+ *                            failed). Ignored for water.
  * @returns {Object|null}     Derived prepared item, or null if the
  *                            required inputs are invalid (no parent,
  *                            missing concentration, or missing
@@ -91,7 +118,7 @@
  * PrepareSolutionModal prevents this from happening under normal
  * use; this is a defensive last line.
  */
-export function buildPreparedSolutionItem(parent, formValues) {
+export function buildPreparedSolutionItem(parent, formValues, options = {}) {
   if (!parent || !parent.found) return null;
   const concentration = (formValues?.concentration || "").trim();
   const solvent = (formValues?.solvent || "").trim();
@@ -108,13 +135,34 @@ export function buildPreparedSolutionItem(parent, formValues) {
   const preparedBy = normaliseOptional(formValues?.preparedBy);
   const preparedDate = normaliseOptional(formValues?.preparedDate);
   const expiryDate = normaliseOptional(formValues?.expiryDate);
+  // The print gate reads hazard evidence after this merge, so a parent nobody
+  // has classified would pass on the solvent's hazards alone and look
+  // classified. Such a parent keeps its empty data and stays blocked.
+  const parentHasHazardEvidence =
+    !parent.upstream_error &&
+    listGhsClassifications(parent).some(
+      (classification) =>
+        (classification.pictograms || []).length > 0 ||
+        (classification.hazard_statements || []).length > 0 ||
+        (classification.precautionary_statements || []).length > 0,
+    );
+  const solventHazards = resolveSolventHazards(
+    solvent,
+    parentHasHazardEvidence ? options?.solventResult || null : null,
+  );
+  const hazardSource = dropGasContainerHazards(
+    solventHazards.status === SOLVENT_HAZARD_STATUS.INCLUDED
+      ? mergeSolventHazardsIntoChemical(parent, options.solventResult)
+      : parent,
+  );
 
   return {
-    // Pass every parent field through verbatim. Using spread rather
-    // than an explicit whitelist so future ChemicalResult fields
-    // (e.g. provenance, P-codes already landed) automatically flow
-    // through without a helper change.
-    ...parent,
+    // Pass every parent field through verbatim (GHS fields merged with
+    // the solvent's when included). Using spread rather than an
+    // explicit whitelist so future ChemicalResult fields (e.g.
+    // provenance, P-codes already landed) automatically flow through
+    // without a helper change.
+    ...hazardSource,
     // Mark as prepared — checked by print helpers and by App-level
     // cleanup logic that wipes selection when a prepared item is
     // present on modal close.
@@ -135,6 +183,10 @@ export function buildPreparedSolutionItem(parent, formValues) {
       preparedBy,
       preparedDate,
       expiryDate,
+      // Whether the solvent's hazards are on the label. Recomputed from a
+      // fresh solvent lookup on every build; never stored in recents or
+      // presets.
+      solventHazards,
     },
   };
 }

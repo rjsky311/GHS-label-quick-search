@@ -31,4 +31,26 @@ describe("printLabelStyles", () => {
       extractDeclaration(noHazardRule, "background"),
     );
   });
+
+  it("lets a prepared container label's ribbon wrap so its details are not ellipsed", () => {
+    const css = buildPrintStyles({
+      layout: resolvePrintLayoutConfig({
+        labelPurpose: "shipping",
+        template: "standard",
+        stockPreset: "medium-bottle",
+      }),
+    });
+
+    const ribbonRule = extractRule(
+      css,
+      "\\.label-standard\\.label-prepared \\.meta-ribbon",
+    );
+    const casRule = extractRule(
+      css,
+      "\\.label-standard\\.label-prepared \\.meta-chip-cas",
+    );
+
+    expect(extractDeclaration(ribbonRule, "flex-wrap")).toBe("wrap");
+    expect(extractDeclaration(casRule, "flex-shrink")).toBe("0");
+  });
 });

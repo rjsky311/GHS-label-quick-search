@@ -2,6 +2,10 @@ import { Tag, X } from "@/components/icons";
 import { getPreparedExpiryBadge } from "@/components/label-print/labelPrintModalHelpers";
 import { getLocalizedNames } from "@/utils/ghsText";
 import { formatPreparedDisplayName } from "@/utils/preparedSolution";
+import {
+  SOLVENT_HAZARD_STATUS,
+  getRecordedSolventHazards,
+} from "@/utils/preparedSolventHazards";
 
 export default function SelectedLabelsControls({
   currentLocale,
@@ -148,6 +152,32 @@ export default function SelectedLabelsControls({
                       })}
                     </div>
                   )}
+
+                  {chem.isPreparedSolution &&
+                    chem.preparedSolution &&
+                    (() => {
+                      const solventHazards = getRecordedSolventHazards(chem);
+                      if (solventHazards.status === SOLVENT_HAZARD_STATUS.WATER) {
+                        return null;
+                      }
+                      const included =
+                        solventHazards.status === SOLVENT_HAZARD_STATUS.INCLUDED;
+                      return (
+                        <div
+                          className={`text-xs font-medium ${
+                            included
+                              ? "text-[hsl(var(--notebook-action))]"
+                              : "notebook-tone-warning"
+                          }`}
+                          data-testid={`selected-prepared-solvent-hazards-${chem.cas_number}`}
+                          data-solvent-hazard-status={solventHazards.status}
+                        >
+                          {included
+                            ? t("prepared.solventHazardsIncludedBadge")
+                            : t("prepared.solventHazardsNotIncludedBadge")}
+                        </div>
+                      );
+                    })()}
 
                   {chem.isPreparedSolution &&
                     chem.preparedSolution &&

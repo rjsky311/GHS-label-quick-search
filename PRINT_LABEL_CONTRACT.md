@@ -28,6 +28,30 @@ The best path is a label workflow that a lab user can print without guessing:
 ## Non-Negotiable Rules
 
 - GHS pictograms are never summarized, hidden behind `+N`, replaced by QR, or omitted from any printed hazard label when pictogram data exists.
+- Container hazard labels (complete primary and container front) never drop
+  an H code for space. A statement that does not fit as full text prints as
+  its H code, and the label shows how many statements are codes only. Space
+  budgets fill by hazard severity, so chronic hazards such as H340/H350/H360
+  and H372 are never the ones reduced first.
+- When the lookup data covers a different form than the everyday name (for
+  example CAS 7647-01-0 is hydrogen chloride including the gas, searched as
+  "hydrochloric acid"), the result, detail view, preview, and complete label
+  show the backend substance note. The note never changes or hides the
+  classification; QR and identification small labels carry no note text.
+- Prepared-solution labels start from the parent chemical's hazard data and
+  are never reduced for concentration or dilution. When the solvent is not
+  water, the solvent is looked up and its pictograms, H statements, and P
+  statements are added by union with the stronger signal word; complete and
+  container front labels then say "Includes solvent hazards". A non-water
+  solvent that cannot be confirmed prints "Solvent hazards not included" on
+  those labels and in the preview. QR and identification small labels carry
+  the merged pictograms, the concentration and solvent, and, when the solvent
+  could not be confirmed, the "not included" warning; they carry no other
+  solvent text. There is no mixture threshold calculation. A parent with no
+  hazard data of its own takes no solvent hazards and stays blocked from
+  printing, the same as without a solvent.
+  A prepared solution is not a gas under pressure, so H280, H281 and the
+  GHS04 pictogram they need are left off its label; every other hazard stays.
 - The public print modal exposes exactly three first-level outputs: Complete
   A4/Letter label, QR small label, and Identification small label.
 - A complete primary label includes product identifier, CAS, signal word, all
@@ -147,9 +171,9 @@ Automated tests should pin these behaviors:
 
 Run these in Browser Use after meaningful print-workflow changes:
 
-- Hydrochloric acid, shipped-container / full / Large Primary: the modal auto-applies A4 or Letter Primary, the print action is available when required profile data is complete, and all pictograms remain visible.
-- Hydrochloric acid on A4 or Letter Primary with an incomplete lab/supplier profile: print action remains disabled and the required-output checklist shows the missing profile fields.
-- Hydrochloric acid after completing lab/supplier name, phone, and address: print action becomes available; all pictograms remain visible in the live label preview.
+- Hydrogen chloride (`7647-01-0`, searched as hydrochloric acid), shipped-container / full / Large Primary: the modal auto-applies A4 or Letter Primary, the print action is available when required profile data is complete, and all pictograms remain visible.
+- Hydrogen chloride (`7647-01-0`) on A4 or Letter Primary with an incomplete lab/supplier profile: print action remains disabled and the required-output checklist shows the missing profile fields.
+- Hydrogen chloride (`7647-01-0`) after completing lab/supplier name, phone, and address: print action becomes available; all pictograms remain visible in the live label preview.
 - A4 Primary preview shows the full label scaled inside the preview pane rather than cropping the top of the full-page label.
 - Ethanol, standard label: all pictograms visible; no `+N` pictogram summary appears.
 - QR small label: CAS, English name, Chinese name, QR, and every pictogram
@@ -159,6 +183,10 @@ Run these in Browser Use after meaningful print-workflow changes:
 - Identification small label: CAS, English name, Chinese name, and every
   pictogram remain visible across the continuation set; no QR, H/P text, or
   signal word is printed.
+- Prepared solution on a QR or identification small label: the concentration
+  and solvent are printed under the names, so it cannot be read as the pure
+  chemical. A solvent that could not be confirmed adds "Solvent hazards not
+  included".
 - Small-label continuation: the print action and summary report the actual
   physical output label count, not just the source chemical count.
 - Black-and-white mode: pictograms and QR are grayscale in preview.

@@ -32,10 +32,14 @@ export const PRINT_QA_CASE_FIELDS = Object.freeze({
   batchNumber: "CASE-2026-0007",
 });
 
+// CAS 7647-01-0 is hydrogen chloride. Its GHS data includes the gas
+// (GHS04, H280), so this fixture pins "print every pictogram in the data",
+// not the label of a hydrochloric acid solution. The export name is kept
+// for QA case ids and evidence history.
 export const PRINT_QA_HYDROCHLORIC_ACID = Object.freeze({
   cas_number: "7647-01-0",
-  name_en: "Hydrochloric Acid",
-  name_zh: "鹽酸",
+  name_en: "Hydrogen chloride",
+  name_zh: "氯化氫",
   cid: 313,
   ghs_pictograms: PRINT_QA_PICTOGRAMS.map((code) => ({ code })),
   signal_word: "Danger",

@@ -62,6 +62,13 @@ describe("printHandoffPreflight", () => {
     );
   });
 
+  it.each(["prepared-detail-overflow", "prepared-solvent-warning-overflow"])(
+    "retries auto-fit before blocking on %s",
+    (type) => {
+      expect(shouldRetryWithAutoFit([{ type }], { autoFitLevel: 0 })).toBe(true);
+    },
+  );
+
   it("does not retry when required images fail", () => {
     expect(
       shouldRetryWithAutoFit(

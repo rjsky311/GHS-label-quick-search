@@ -624,6 +624,22 @@ export const buildPrintStyles = (model) => {
       white-space: nowrap;
       min-width: 0;
     }
+    .small-prepared-identity {
+      color: #0f172a;
+      font-size: 6.6px;
+      font-weight: 850;
+      line-height: 1.12;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+    .small-prepared-warning {
+      color: #b91c1c;
+      font-size: 6.2px;
+      font-weight: 850;
+      line-height: 1.12;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
     .small-identity .continuation-badge {
       position: absolute;
       right: 1mm;
@@ -766,6 +782,15 @@ export const buildPrintStyles = (model) => {
       margin-left: 0.15mm;
       overflow: visible;
       text-overflow: clip;
+    }
+    /* A prepared solution's concentration, solvent and solvent warning all have
+       to stay readable, so its ribbon wraps instead of ellipsing them. */
+    .label-standard.label-prepared .meta-ribbon {
+      flex-wrap: wrap;
+      row-gap: 0.25mm;
+    }
+    .label-standard.label-prepared .meta-chip-cas {
+      flex-shrink: 0;
     }
     .meta-ribbon .support-chip {
       margin: 0;
@@ -957,6 +982,52 @@ export const buildPrintStyles = (model) => {
       font-size: 8.9px;
       font-weight: 700;
       line-height: 1.18;
+    }
+    .prepared-solvent-hazards {
+      margin-top: 0.6mm;
+      padding: 0.45mm 0.8mm;
+      border-radius: 0.5mm;
+      font-size: calc(${layout.typography.fontSize} - 2px);
+      font-weight: 700;
+      line-height: 1.18;
+      word-break: break-word;
+    }
+    .prepared-solvent-hazards-missing {
+      color: #7f1d1d;
+      background: #fef2f2;
+      border: 0.22mm solid #fca5a5;
+      border-left: 1.1mm solid #dc2626;
+    }
+    .prepared-solvent-hazards-included {
+      color: #1e3a8a;
+      background: #eff6ff;
+      border: 0.22mm solid #bfdbfe;
+      border-left: 1.1mm solid #2563eb;
+    }
+    .prepared-identity-block .prepared-solvent-hazards {
+      grid-column: 1 / -1;
+    }
+    .substance-scope-notes {
+      margin-top: 0.7mm;
+      display: grid;
+      gap: 0.4mm;
+    }
+    .substance-scope-note {
+      padding: 0.45mm 0.8mm;
+      border-radius: 0.5mm;
+      font-size: calc(${layout.typography.fontSize} - 2px);
+      font-weight: 600;
+      line-height: 1.2;
+      color: #78350f;
+      background: #fffbeb;
+      border: 0.22mm solid #fcd34d;
+      border-left: 1.1mm solid #d97706;
+      word-break: break-word;
+    }
+    .meta-chip-prepared-solvent-missing {
+      color: #7f1d1d;
+      border-color: #dc2626;
+      font-weight: 800;
     }
     .prepared-operational {
       margin-top: 0.6mm;
@@ -1180,7 +1251,11 @@ export const buildPrintStyles = (model) => {
       min-width: 0;
       overflow-wrap: anywhere;
     }
-    .hazard-more {
+    .hazard-overflow-codes {
+      display: flex;
+    }
+    .hazard-more,
+    .hazard-text-omitted {
       padding: 0.35mm 0.6mm;
       border-radius: 0.9mm;
       border: 1px dashed #cbd5e1;
@@ -1550,6 +1625,15 @@ export const buildPrintStyles = (model) => {
       justify-content: flex-start;
       gap: 0.45mm;
     }
+    /* Codes only on a strip label: keep every code by sharing the signal word's row. */
+    .label-standard.label-form-strip .standard-main-codes {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 0.45mm;
+    }
+    .label-standard.label-form-strip .standard-main-codes .standard-hazard-board {
+      flex: 1 1 0;
+    }
     .label-standard.label-form-strip .standard-main {
       gap: 0.38mm;
     }
@@ -1563,6 +1647,7 @@ export const buildPrintStyles = (model) => {
       line-height: 1.02;
     }
     .label-standard.label-form-strip .hazard-more,
+    .label-standard.label-form-strip .hazard-text-omitted,
     .label-standard.label-form-strip .precautions-compact,
     .label-standard.label-form-strip .precaution-more {
       font-size: 5px;
@@ -1723,6 +1808,36 @@ export const buildPrintStyles = (model) => {
     .label-icon.label-stock-small-rack .pictograms-icon img {
       width: 11.4mm;
       height: 11.4mm;
+    }
+    /* A prepared solution's identity lines take height from the pictograms. */
+    .label-icon.label-stock-small-strip.label-form-strip.label-prepared.label-pictogram-count-7 .pictograms-icon,
+    .label-icon.label-stock-small-strip.label-form-strip.label-prepared.label-pictogram-count-8 .pictograms-icon,
+    .label-icon.label-stock-small-strip.label-form-strip.label-prepared.label-pictogram-count-9 .pictograms-icon {
+      grid-template-columns: repeat(9, 7mm);
+      grid-auto-rows: 7mm;
+      gap: 0.3mm;
+    }
+    .label-icon.label-stock-small-strip.label-form-strip.label-prepared.label-pictogram-count-7 .pictograms-icon img,
+    .label-icon.label-stock-small-strip.label-form-strip.label-prepared.label-pictogram-count-8 .pictograms-icon img,
+    .label-icon.label-stock-small-strip.label-form-strip.label-prepared.label-pictogram-count-9 .pictograms-icon img {
+      width: 7mm;
+      height: 7mm;
+    }
+    .label-icon.label-stock-small-rack.label-prepared.label-pictogram-count-5 .pictograms-icon,
+    .label-icon.label-stock-small-rack.label-prepared.label-pictogram-count-6 .pictograms-icon,
+    .label-icon.label-stock-small-rack.label-prepared.label-pictogram-count-7 .pictograms-icon,
+    .label-icon.label-stock-small-rack.label-prepared.label-pictogram-count-8 .pictograms-icon,
+    .label-icon.label-stock-small-rack.label-prepared.label-pictogram-count-9 .pictograms-icon {
+      grid-template-columns: repeat(6, 8.1mm);
+      gap: 0.25mm;
+    }
+    .label-icon.label-stock-small-rack.label-prepared.label-pictogram-count-5 .pictograms-icon img,
+    .label-icon.label-stock-small-rack.label-prepared.label-pictogram-count-6 .pictograms-icon img,
+    .label-icon.label-stock-small-rack.label-prepared.label-pictogram-count-7 .pictograms-icon img,
+    .label-icon.label-stock-small-rack.label-prepared.label-pictogram-count-8 .pictograms-icon img,
+    .label-icon.label-stock-small-rack.label-prepared.label-pictogram-count-9 .pictograms-icon img {
+      width: 8.1mm;
+      height: 8.1mm;
     }
     .label-icon.label-stock-small-rack .signal {
       font-size: 5.5px;
@@ -1927,7 +2042,8 @@ export const buildPrintStyles = (model) => {
       line-height: 1;
       padding: 0.85mm 1.1mm;
     }
-    .label-standard.label-stock-large-primary .hazard-more {
+    .label-standard.label-stock-large-primary .hazard-more,
+    .label-standard.label-stock-large-primary .hazard-text-omitted {
       padding: 0.42mm 0.75mm;
       font-size: 8px;
       line-height: 1.05;
@@ -2276,6 +2392,14 @@ export const buildPrintStyles = (model) => {
       width: 9mm;
       height: 9mm;
     }
+    .label-stock-medium-rack.label-qr.label-form-compact.label-prepared.label-pictogram-count-9 .pictograms.qr-pics {
+      grid-template-columns: repeat(5, 7.2mm);
+      gap: 0.35mm;
+    }
+    .label-stock-medium-rack.label-qr.label-form-compact.label-prepared.label-pictogram-count-9 .pictograms.qr-pics img {
+      width: 7.2mm;
+      height: 7.2mm;
+    }
     .label-stock-medium-rack.label-qr.label-form-compact .qr-priority-block {
       padding: 0.45mm 0;
       border: 0;
@@ -2316,8 +2440,11 @@ export const buildPrintStyles = (model) => {
           body.print-bw .prepared-badge,
           body.print-bw .prepared-note,
           body.print-bw .prepared-parent-warning,
+          body.print-bw .prepared-solvent-hazards,
+          body.print-bw .substance-scope-note,
           body.print-bw .hazard-primary-item,
           body.print-bw .hazard-more,
+          body.print-bw .hazard-text-omitted,
           body.print-bw .qr-hazard-chip,
           body.print-bw .profile-block-missing,
           body.print-bw .signal {

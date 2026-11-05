@@ -89,10 +89,29 @@ export function shouldRenderBilingualLabelText(
   return layout.labelPurpose === "shipping" && layout.template === "full";
 }
 
+// PubChem's English hazard strings carry the code, the share of notifications and
+// the hazard class, for example
+// "H225 (99.7%): Highly Flammable liquid and vapor [Danger Flammable liquids]".
+// The code and the signal word are shown on their own, so only the statement stays.
+const PUBCHEM_STATEMENT_PREFIX =
+  /^H\d{3}[A-Za-z]*(?:\s*\+\s*H\d{3}[A-Za-z]*)*(?:\s*\([^)]*%\))?\s*:\s*/;
+const PUBCHEM_STATEMENT_CLASS_SUFFIX = /\s*\[[^\]]*\]\s*$/;
+
+export function cleanEnglishStatementText(text) {
+  const raw = String(text ?? "");
+  const cleaned = raw
+    .replace(PUBCHEM_STATEMENT_PREFIX, "")
+    .replace(PUBCHEM_STATEMENT_CLASS_SUFFIX, "")
+    .trim();
+  return cleaned || raw;
+}
+
 export function getLocalizedStatementText(statement, languageLike = "zh") {
   const locale = resolveDisplayLocale(languageLike);
   if (locale === "en") {
-    return statement?.text_en || statement?.text || statement?.text_zh || "";
+    return cleanEnglishStatementText(
+      statement?.text_en || statement?.text || statement?.text_zh || "",
+    );
   }
   return statement?.text_zh || statement?.text || statement?.text_en || "";
 }

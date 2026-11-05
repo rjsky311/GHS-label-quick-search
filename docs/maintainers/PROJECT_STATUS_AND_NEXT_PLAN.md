@@ -1,5 +1,50 @@
 # Project Status And Next Plan
 
+## Release checkpoint — 2026-11-05 (`d5cd926`)
+
+Runtime release for #87: names resolve only to that compound, prepared-solution
+labels carry the solvent's hazards and no gas-container hazards, container labels
+keep every H code ranked by severity, and `follow-redirects` moves to 1.16.2.
+Before release, production returned the wrong compound for common names (`HCl`
+returned Tris HCl, `dichloromethane` a palladium complex, `gold` gold trichloride,
+`methane` methanesulfonic acid, `lead` lead tetraacetate). Released under the
+manual provider-native model with the owner's authorization; release and
+acceptance by Claude.
+
+- Release SHA: `d5cd926bad4eb709e1271c502943eaed61e06319` (equal to `main` at
+  release time).
+- Frontend: Cloudflare Pages `ghs-label-quick-search-shadow` Direct Upload,
+  production deployment `411028e7-b142-441d-8943-9ad6c48d496a`, Node v22.23.1
+  and npm 11.6.2 from a clean clone, same origins and feature flags. After upload
+  all 45 servable files on both the canonical and Pages domains match the verified
+  build (`index.html` compared at `/`, because `/index.html` redirects there).
+- Backend: Railway `ghs-backend` native deploy
+  `fc6c65ff-b335-43ec-a880-795ff5d637c9` (`railway up` from the clean clone after
+  setting `BUILD_GIT_SHA` with `--skip-deploys`, so only one deployment was
+  created).
+- Rollback references: frontend `88df4e56-6eb5-48a8-8829-d7331fa0a939`, backend
+  `f0daedc9-afbf-43cd-ab06-824cb2d79268` (SHA `ac2a88a`).
+- Acceptance: both `build-info.json` and `/api/health` report the release SHA;
+  health `healthy`/`ready`, PDF available; `qa:production-health` and
+  `qa:production-pdf-canary` passed; CORS allows only the canonical and Pages
+  origins (`https://evil.example` gets 400 without allow-origin); security headers
+  present on both origins. The five queries above now return the right compound,
+  through the API and, for `HCl`, through the production UI.
+- Manual Production Print QA in product mode, run `41966468116`, passed end to end
+  (19/19 steps), including the freshness gate; the post-merge run `41966086681`
+  also passed.
+- Known QA script limit: run from macOS, `qa:production-smoke` fails
+  `ethylene-oxide-a4-primary-continuation` on
+  `preview-next-critical-elements-visible`. The check inspects page 2 right after
+  `srcdoc` changes, and `waitForPreviewImagesReady` still sees the old document, so
+  some pictograms read as not ready. With a 3-second wait the case passes, and the
+  production UI shows all 6 pictograms on page 2. The Linux runners are unaffected.
+  The script is unchanged in this release.
+- Behaviour to expect: merged solvent hazards add content, so some label and stock
+  combinations now stop and ask for a larger label instead of printing.
+- Physical printing remains unverified. Dependabot #70 (`follow-redirects`) is
+  addressed by the lockfile update in this release.
+
 ## Release checkpoint — 2026-11-01 (`ac2a88a`)
 
 Runtime release for #83 (pypdf 6.21.2 → 6.21.4; CVE-2026-119203 to

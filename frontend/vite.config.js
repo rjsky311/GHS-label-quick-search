@@ -355,6 +355,7 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks(id) {
+            if (id.includes("/utils/printTextFallbacks")) return "print-text-fallbacks";
             if (!id.includes("node_modules")) return undefined;
             if (id.includes("react") || id.includes("scheduler")) return "vendor-react";
             if (id.includes("i18next")) return "vendor-i18n";

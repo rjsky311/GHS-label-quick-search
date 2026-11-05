@@ -8,6 +8,9 @@ export function listGhsClassifications(chemical = {}) {
       signal_word_zh: chemical.signal_word_zh,
       source: chemical.primary_source,
       report_count: chemical.primary_report_count,
+      ...(chemical.primary_solvent_base_fingerprint
+        ? { solvent_base_fingerprint: chemical.primary_solvent_base_fingerprint }
+        : {}),
     },
     ...(Array.isArray(chemical.other_classifications)
       ? chemical.other_classifications
@@ -31,6 +34,15 @@ const normalizeFingerprintCodes = (items = []) =>
   ].sort();
 
 export function getGhsClassificationFingerprint(classification = {}) {
+  // A classification that a prepared solution merged with its solvent's
+  // hazards keeps the identity of the parent classification it came from,
+  // so a saved classification choice for the parent CAS still matches it.
+  if (
+    typeof classification.solvent_base_fingerprint === "string" &&
+    classification.solvent_base_fingerprint
+  ) {
+    return classification.solvent_base_fingerprint;
+  }
   return `ghs-classification.v1:${JSON.stringify({
     source: normalizeFingerprintText(classification.source),
     pictograms: normalizeFingerprintCodes(classification.pictograms),
@@ -110,6 +122,9 @@ export function applySelectedGhsClassification(
     primary_report_count: selected.report_count || chemical.primary_report_count,
     selected_classification_index: selected.customIndex,
     selected_classification_fingerprint: selected.classificationFingerprint,
+    ...(chemical.primary_solvent_base_fingerprint
+      ? { primary_solvent_base_fingerprint: selected.classificationFingerprint }
+      : {}),
     customNote: selected.note,
   };
 }

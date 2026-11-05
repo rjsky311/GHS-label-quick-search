@@ -23,6 +23,8 @@ export const AUTO_FIT_RETRY_ISSUE_TYPES = new Set([
   "cas-value-overflow",
   "case-chip-overflow",
   "case-value-overflow",
+  "prepared-detail-overflow",
+  "prepared-solvent-warning-overflow",
   "support-chip-overflow",
   "custom-fields-overflow",
   "name-section-overflow",
