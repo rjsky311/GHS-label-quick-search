@@ -783,6 +783,15 @@ export const buildPrintStyles = (model) => {
       overflow: visible;
       text-overflow: clip;
     }
+    /* A prepared solution's concentration, solvent and solvent warning all have
+       to stay readable, so its ribbon wraps instead of ellipsing them. */
+    .label-standard.label-prepared .meta-ribbon {
+      flex-wrap: wrap;
+      row-gap: 0.25mm;
+    }
+    .label-standard.label-prepared .meta-chip-cas {
+      flex-shrink: 0;
+    }
     .meta-ribbon .support-chip {
       margin: 0;
     }
