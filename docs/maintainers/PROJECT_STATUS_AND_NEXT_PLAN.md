@@ -1,5 +1,50 @@
 # Project Status And Next Plan
 
+## Release checkpoint — 2026-11-05 (`eaab03c`)
+
+Runtime release for #90, with the public-tree cleanup #89 and the #88 record in the
+same deployment. Since `11e1114` (2026-05-11) a CAS lookup took the first PubChem
+substance record, so nitric acid, acetic acid, and other common reagents showed no
+GHS data and others showed another substance's hazards. A CAS now resolves to the
+compound most of its substance records agree on, reports about another substance
+are no longer offered, and a full-dictionary audit gates the release. The owner
+read the common-reagent comparison before release and approved it; release and
+acceptance by Claude.
+
+- Release SHA: `eaab03c6df93763443b5b7350278e780c1d26cca` (equal to `main` at
+  release time). Its tree is identical to the tree checked locally before merge.
+- Frontend: Cloudflare Pages `ghs-label-quick-search-shadow` Direct Upload,
+  production deployment `704d870e-09ec-4189-a993-2b42bae83f22`, Node v22.23.1 and
+  npm 11.6.2 from a clean clone. All 45 servable files on the canonical domain
+  match the verified build.
+- Backend: Railway `ghs-backend` native deploy
+  `46db2f2e-ffac-4f35-9a68-8995c19aaaeb`, `railway up` from the clean clone after
+  setting `BUILD_GIT_SHA` with `--skip-deploys`.
+- Rollback references: frontend `411028e7-b142-441d-8943-9ad6c48d496a`, backend
+  `fc6c65ff-b335-43ec-a880-795ff5d637c9` (SHA `d5cd926`).
+- Before merge, on the integrated tree: frontend 1,583 tests, print contract 344,
+  QA scripts 56, print PDFs 42/42, backend 609 passed and 1 skipped, docs and i18n
+  checks. Production QA scripts against a local build passed: search UI, print
+  handoff 6/6, prepared solutions 9/9, batch, lab-ready batch.
+- Dictionary audit against real PubChem: 1,754 rows, 1,583 with hazard data, 0
+  needing a person, 0 common reagent changes, 0 stale reviewed rows.
+- Acceptance: both `build-info.json` and `/api/health` report the release SHA;
+  health `healthy`/`ready`, PDF available; `qa:production-health` and
+  `qa:production-pdf-canary` passed; CORS allows only the canonical and Pages
+  origins (`https://evil.example` gets 400 without allow-origin); security headers
+  present on both origins. Production returned the audit's data for all 82 common
+  reagents (70 with pictograms, 12 with no GHS data in PubChem or no data by
+  review, 0 differences, 0 upstream errors). The production UI was checked for
+  nitric acid, sodium chloride, xylenes, and sodium hydride.
+- `qa:production-search-ui`, `qa:production-prepared` 9/9, `qa:production-batch-print`,
+  `qa:production-lab-ready-batch`, and `qa:production-product` passed from macOS.
+  The ethylene oxide limit noted in the checkpoint below did not appear this run; the
+  script is unchanged. Manual Production Print QA in product mode, run
+  `42048350152`, passed.
+- Known limit: the audit finds records and reports about the wrong substance. It
+  cannot tell whether a classification is accurate, so the SDS reminder stays.
+- Physical printing remains unverified.
+
 ## Release checkpoint — 2026-11-05 (`d5cd926`)
 
 Runtime release for #87: names resolve only to that compound, prepared-solution
