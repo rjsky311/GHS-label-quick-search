@@ -92,6 +92,42 @@ SUBSTANCE_SCOPE_NOTES: Dict[str, List[SubstanceScopeNote]] = {
             "source": "Supplier SDS for methanol-stabilised formaldehyde solutions.",
         }
     ],
+    # Xylenes: the record for the mixed isomers holds one company's report, which
+    # lists less than the much larger reports on the single isomers.
+    "1330-20-7": [
+        {
+            "code": "xylenes-mixed-isomers-single-report",
+            "text_en": (
+                "This classification comes from one company's report on the mixed "
+                "isomers (CAS 1330-20-7). PubChem's o-xylene and p-xylene records "
+                "also list H304 (aspiration) and GHS08. The SDS of the bottle in "
+                "hand governs."
+            ),
+            "text_zh": (
+                "此分類只來自一家公司對混合異構物（CAS 1330-20-7）的通報。PubChem "
+                "的鄰二甲苯、對二甲苯紀錄另列 H304（吸入性危害）與 GHS08。以手上"
+                "那瓶的安全資料表（SDS）為準。"
+            ),
+            "source": "PubChem CID 6850715 (EC 905-215-1); CID 7237 and CID 7809.",
+        }
+    ],
+    # Paraformaldehyde: PubChem has no classification of its own, and the site
+    # shows no hazards, but it releases formaldehyde.
+    "30525-89-4": [
+        {
+            "code": "paraformaldehyde-no-own-data",
+            "text_en": (
+                "PubChem has no GHS classification for paraformaldehyde itself. It "
+                "releases formaldehyde (CAS 50-00-0), so formaldehyde's hazards may "
+                "apply. The SDS of the bottle in hand governs."
+            ),
+            "text_zh": (
+                "PubChem 沒有多聚甲醛本身的 GHS 分類。它會釋出甲醛（CAS 50-00-0），"
+                "甲醛的危害可能適用。以手上那瓶的安全資料表（SDS）為準。"
+            ),
+            "source": "Paraformaldehyde is a polymer of formaldehyde and releases it; supplier SDS.",
+        }
+    ],
     # Hydrogen bromide and hydrogen iodide: same as hydrogen chloride, but the
     # reports PubChem holds all carry the gas pictogram, so there is no solution
     # classification to point at.
