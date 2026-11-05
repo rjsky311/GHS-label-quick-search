@@ -1,4 +1,5 @@
 import {
+  cleanEnglishStatementText,
   getLocalizedNames,
   hasCjkText,
   resolveEnglishName,
@@ -76,5 +77,34 @@ describe("ghsText identity helpers", () => {
   it("exposes CJK detection for display callers", () => {
     expect(hasCjkText("4-溴二苯甲酮")).toBe(true);
     expect(hasCjkText("4-Bromobenzophenone")).toBe(false);
+  });
+});
+
+describe("cleanEnglishStatementText", () => {
+  it("removes the code, notification share and class from PubChem strings", () => {
+    expect(
+      cleanEnglishStatementText(
+        "H225 (99.7%): Highly Flammable liquid and vapor [Danger Flammable liquids]",
+      ),
+    ).toBe("Highly Flammable liquid and vapor");
+    expect(
+      cleanEnglishStatementText(
+        "H412 (17.2%): Harmful to aquatic life with long lasting effects [Hazardous to the aquatic environment, long-term hazard]",
+      ),
+    ).toBe("Harmful to aquatic life with long lasting effects");
+  });
+
+  it("handles combined codes and strings with no share", () => {
+    expect(
+      cleanEnglishStatementText("H300 + H310: Fatal if swallowed or in contact with skin"),
+    ).toBe("Fatal if swallowed or in contact with skin");
+  });
+
+  it("leaves plain statements alone and never returns an empty string", () => {
+    expect(cleanEnglishStatementText("Causes serious eye damage.")).toBe(
+      "Causes serious eye damage.",
+    );
+    expect(cleanEnglishStatementText("H225: [Danger]")).toBe("H225: [Danger]");
+    expect(cleanEnglishStatementText(undefined)).toBe("");
   });
 });
