@@ -207,4 +207,37 @@ describe("persona gate: general single lookup trust", () => {
     expect(screen.getByTestId("authoritative-source-note-detail")).toBeInTheDocument();
   });
 
+  it("keeps a single result on screen after picking a classification from the review prompt", async () => {
+    render(<App />);
+    await runSingleSearch(singleLookupTrustResult);
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("results-multiple-ghs-review-primary"));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("detail-btn-0"));
+    });
+    const setAsMain = await screen.findByRole("button", { name: /compare\.setAsPrimary/ });
+    await act(async () => {
+      fireEvent.click(setAsMain);
+    });
+
+    expect(screen.getByTestId("result-row-0")).toBeInTheDocument();
+  });
+
+  it("does not carry the review prompt's filter into the next single search", async () => {
+    render(<App />);
+    await runSingleSearch(singleLookupTrustResult);
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("results-multiple-ghs-review-primary"));
+    });
+    await runSingleSearch({
+      ...singleLookupTrustResult,
+      has_multiple_classifications: false,
+      other_classifications: [],
+    });
+
+    expect(screen.getByTestId("result-row-0")).toBeInTheDocument();
+  });
 });

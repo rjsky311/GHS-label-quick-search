@@ -12,11 +12,17 @@ jest.mock("@/constants/ghs", () => ({
   },
 }));
 
+import { render, screen } from "@testing-library/react";
+import SubstanceScopeNotes from "@/components/SubstanceScopeNotes";
 import { buildPrintPreviewDocument } from "../printLabels";
 import { buildPrintLabelContent } from "../printContentModel";
 import { estimatePrintContentTextWeight } from "../printFitEngine";
 import { buildPreparedSolutionItem } from "../preparedSolution";
-import { getSubstanceNoteText, getSubstanceNotes } from "../substanceNotes";
+import {
+  getSubstanceNoteHowTo,
+  getSubstanceNoteText,
+  getSubstanceNotes,
+} from "../substanceNotes";
 import { buildSubstanceNoteRisks } from "@/components/label-print/labelPrintModalHelpers";
 
 const HCL_NOTE = Object.freeze({
@@ -25,6 +31,8 @@ const HCL_NOTE = Object.freeze({
     "This GHS classification is for hydrogen chloride (CAS 7647-01-0), including the gas, so it can show gas-only hazards such as GHS04. Hydrochloric acid solution supplier labels are usually GHS05 and GHS07 (H290, H314, H335). The SDS of the bottle in hand governs.",
   text_zh:
     "此 GHS 分類是氯化氫（CAS 7647-01-0，含氣體）的分類，可能出現 GHS04 等只適用於氣體的危害。鹽酸水溶液的供應商標籤通常是 GHS05、GHS07（H290、H314、H335）。以手上那瓶的安全資料表（SDS）為準。",
+  how_to_en: "Open Details and set the acid's classification as primary.",
+  how_to_zh: "開詳細資訊，把鹽酸那筆設為主要。",
   source:
     "Hydrochloric acid solution: CLP Annex VI index 017-002-01-X (H314, H335); H290 from supplier SDS.",
 });
@@ -66,6 +74,31 @@ const preview = (chemical, layout) =>
   ).fragmentHtml;
 
 describe("substance scope notes", () => {
+  it("never prints what to do on the site", () => {
+    const html = preview(hydrogenChloride, { template: "full", stockPreset: "a4-primary" });
+
+    expect(html).toContain('data-testid="substance-scope-notes"');
+    expect(html).not.toContain(HCL_NOTE.how_to_en);
+    expect(buildSubstanceNoteRisks({
+      previewChem: hydrogenChloride,
+      locale: "en",
+      tx: (_key, _fallback, { note }) => note,
+    })[0]).not.toContain(HCL_NOTE.how_to_en);
+  });
+
+  it("shows what to do on the site", () => {
+    render(<SubstanceScopeNotes chemical={hydrogenChloride} compact />);
+
+    expect(screen.getByRole("note")).toHaveTextContent(HCL_NOTE.how_to_en);
+  });
+
+  it("shows only the note when it says nothing about the site", () => {
+    const { how_to_en, how_to_zh, ...noteWithoutHowTo } = HCL_NOTE;
+    expect(getSubstanceNoteHowTo(noteWithoutHowTo, "zh-TW")).toBe("");
+    expect(getSubstanceNoteHowTo(HCL_NOTE, "en")).toBe(how_to_en);
+    expect(getSubstanceNoteHowTo(HCL_NOTE, "zh-TW")).toBe(how_to_zh);
+  });
+
   it("reads valid notes and localizes them", () => {
     expect(getSubstanceNotes(hydrogenChloride)).toHaveLength(1);
     expect(getSubstanceNotes({ substance_notes: [{ code: "x" }, null] })).toEqual([]);

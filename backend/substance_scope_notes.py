@@ -7,6 +7,10 @@ classification: it never adds, removes, or changes pictograms, signal
 words, or H/P statements. The classification shown stays the PubChem
 result. Each note carries its own source so its wording can be checked.
 
+text_en and text_zh are also printed on complete labels, so they must still read
+true whichever classification the user picked. A note that tells the user what to
+do on the site puts that in how_to_en and how_to_zh, which only the site shows.
+
 Keep this list short and only for cases where a common lab name points
 at a classification for a different physical form (gas vs. solution,
 anhydrous vs. aqueous, stabilised product vs. pure substance).
@@ -29,17 +33,22 @@ SUBSTANCE_SCOPE_NOTES: Dict[str, List[SubstanceScopeNote]] = {
                 "This GHS classification is for hydrogen chloride (CAS "
                 "7647-01-0), including the gas, so it can show gas-only "
                 "hazards such as GHS04. Hydrochloric acid solution supplier "
-                "labels are usually GHS05 and GHS07 (H290, H314, H335). For a "
-                "bottle of the acid, open the details and set the GHS05, GHS07 "
-                "classification as primary before printing. The SDS of the "
-                "bottle in hand governs."
+                "labels are usually GHS05 and GHS07 (H290, H314, H335). "
+                "The SDS of the bottle in hand governs."
             ),
             "text_zh": (
                 "此 GHS 分類是氯化氫（CAS 7647-01-0，含氣體）的分類，"
                 "可能出現 GHS04 等只適用於氣體的危害。鹽酸水溶液的供應商"
-                "標籤通常是 GHS05、GHS07（H290、H314、H335）。要印鹽酸的標籤，"
-                "請在詳細資料把 GHS05、GHS07 那筆分類設為主要分類再列印。"
+                "標籤通常是 GHS05、GHS07（H290、H314、H335）。"
                 "以手上那瓶的安全資料表（SDS）為準。"
+            ),
+            "how_to_en": (
+                "For a bottle of the acid: open Details, choose Set as primary "
+                "on the GHS05, GHS07 classification, then print."
+            ),
+            "how_to_zh": (
+                "要印鹽酸的標籤：開「詳細資訊」，在 GHS05、GHS07 那筆按"
+                "「設為主要」，再列印。"
             ),
             "source": (
                 "Hydrochloric acid solution: CLP Annex VI index "
@@ -126,17 +135,21 @@ SUBSTANCE_SCOPE_NOTES: Dict[str, List[SubstanceScopeNote]] = {
         {
             "code": "methylamine-gas-and-solution",
             "text_en": (
-                "This GHS classification mixes the gas and the solution of "
-                "methylamine (CAS 74-89-5). For a bottle of the solution, open "
-                "the details and set the GHS02, GHS05, GHS07 classification "
-                "(H224, H302, H314, H332) as primary before printing. The SDS "
-                "of the bottle in hand governs."
+                "This GHS data mixes the gas and the solution of methylamine "
+                "(CAS 74-89-5). The SDS of the bottle in hand governs."
             ),
             "text_zh": (
-                "此 GHS 分類混合甲胺（CAS 74-89-5）氣體與溶液的資料。要印溶液"
-                "的標籤，請在詳細資料把 GHS02、GHS05、GHS07（H224、H302、H314、"
-                "H332）那筆分類設為主要分類再列印。以手上那瓶的安全資料表"
-                "（SDS）為準。"
+                "此 GHS 資料混合甲胺（CAS 74-89-5）氣體與溶液。以手上那瓶的"
+                "安全資料表（SDS）為準。"
+            ),
+            "how_to_en": (
+                "For a bottle of the solution: open Details, choose Set as "
+                "primary on the GHS02, GHS05, GHS07 classification (H224, H302, "
+                "H314, H332), then print."
+            ),
+            "how_to_zh": (
+                "要印溶液的標籤：開「詳細資訊」，在 GHS02、GHS05、GHS07（H224、"
+                "H302、H314、H332）那筆按「設為主要」，再列印。"
             ),
             "source": "PubChem CID 6329: CLP entry for mono-methylamine ... %.",
         }
@@ -145,16 +158,21 @@ SUBSTANCE_SCOPE_NOTES: Dict[str, List[SubstanceScopeNote]] = {
         {
             "code": "dimethylamine-gas-and-solution",
             "text_en": (
-                "This GHS classification mixes the gas and the solution of "
-                "dimethylamine (CAS 124-40-3). For a bottle of the solution, "
-                "open the details and set the classification with H224, H302, "
-                "H314, H332 as primary before printing. The SDS of the bottle "
-                "in hand governs."
+                "This GHS data mixes the gas and the solution of dimethylamine "
+                "(CAS 124-40-3). The SDS of the bottle in hand governs."
             ),
             "text_zh": (
-                "此 GHS 分類混合二甲胺（CAS 124-40-3）氣體與溶液的資料。要印"
-                "溶液的標籤，請在詳細資料把 H224、H302、H314、H332 那筆分類設為"
-                "主要分類再列印。以手上那瓶的安全資料表（SDS）為準。"
+                "此 GHS 資料混合二甲胺（CAS 124-40-3）氣體與溶液。以手上那瓶的"
+                "安全資料表（SDS）為準。"
+            ),
+            "how_to_en": (
+                "For a bottle of the solution: open Details, choose Set as "
+                "primary on the GHS02, GHS05, GHS07 classification (H224, H302, "
+                "H314, H332), then print."
+            ),
+            "how_to_zh": (
+                "要印溶液的標籤：開「詳細資訊」，在 GHS02、GHS05、GHS07（H224、"
+                "H302、H314、H332）那筆按「設為主要」，再列印。"
             ),
             "source": "PubChem CID 674: CLP entry for di-methylamine ... %.",
         }

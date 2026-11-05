@@ -97,6 +97,19 @@ def test_every_scope_note_carries_bilingual_text_and_a_source():
             assert note["source"], cas_number
 
 
+def test_text_printed_on_labels_gives_no_site_instructions():
+    for cas_number, notes in SUBSTANCE_SCOPE_NOTES.items():
+        for note in notes:
+            assert "primary" not in note["text_en"], cas_number
+            assert "設為主要" not in note["text_zh"], cas_number
+
+
+def test_a_how_to_comes_in_both_languages():
+    for cas_number, notes in SUBSTANCE_SCOPE_NOTES.items():
+        for note in notes:
+            assert bool(note.get("how_to_en")) == bool(note.get("how_to_zh")), cas_number
+
+
 def test_chemical_result_attaches_notes_without_changing_ghs_data():
     result = ChemicalResult(
         cas_number="7647-01-0",

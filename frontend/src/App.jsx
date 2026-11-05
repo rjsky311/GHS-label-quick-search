@@ -479,7 +479,9 @@ function App() {
       });
     }
 
-    if (advancedFilter.reviewIssueType) {
+    // One result has nothing to narrow down, and the toolbar that clears this
+    // filter only shows for more than one. Filtering would just empty the table.
+    if (advancedFilter.reviewIssueType && results.length > 1) {
       filtered = filtered.filter((r) => {
         const effective = r.found ? getEffectiveClassification(r) : null;
         return getDataQualityIssues(r, effective).some(

@@ -7,7 +7,9 @@
  * reminders only: they never change pictograms, signal words, or H/P
  * statements. Each note has `code`, `text_en`, `text_zh`, and `source`
  * (where non-PubChem wording comes from; see backend
- * `substance_scope_notes.py`).
+ * `substance_scope_notes.py`). The text is also printed on complete labels.
+ * `how_to_en` and `how_to_zh`, when present, say what to do on the site and
+ * are never printed.
  */
 import { getLocalizedStatementText } from "@/utils/ghsText";
 
@@ -27,4 +29,12 @@ export function getSubstanceNotes(chemical) {
 /** Note text in one display language, falling back to the other. */
 export function getSubstanceNoteText(note, locale = "zh") {
   return getLocalizedStatementText(note, locale);
+}
+
+/** What to do on the site about this note, or "" when it says nothing. */
+export function getSubstanceNoteHowTo(note, locale = "zh") {
+  return getLocalizedStatementText(
+    { text_en: note?.how_to_en, text_zh: note?.how_to_zh },
+    locale,
+  );
 }
