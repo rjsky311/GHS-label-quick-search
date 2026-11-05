@@ -13,6 +13,7 @@ import httpx
 
 from chemical_dict import CAS_TO_EN, CAS_TO_ZH
 from export_helpers import spreadsheet_safe
+from reviewed_cas_resolutions import REVIEWED_CAS_RESOLUTIONS
 from seed_dictionary_identity_exemptions import REVIEWED_IDENTITY_EXEMPTIONS
 
 AUDIT_SOURCE = "seed-dictionary-identity-audit"
@@ -22,6 +23,7 @@ AUDIT_STATUSES = (
     "title_match",
     "synonym_match",
     "reviewed_exemption",
+    "reviewed_resolution",
     "mismatch",
     "no_record",
     "upstream_error",
@@ -402,6 +404,25 @@ def audit_seed_entry(
     )
     try:
         try:
+            # The site does not use PubChem's majority for these, so neither do we.
+            resolution = REVIEWED_CAS_RESOLUTIONS.get(cas_number)
+            if resolution:
+                result = _base_result(cas_number, dictionary_name_en)
+                result.update(
+                    {
+                        "status": "reviewed_resolution",
+                        "cid": resolution["cid"],
+                        "cidSource": "reviewed_resolution",
+                        "cidVoteCount": 0,
+                        "cidVoteTotal": 0,
+                        "cidVoteRatio": None,
+                        "pubchemTitle": "",
+                        "matchedSynonym": None,
+                        "error": "",
+                    }
+                )
+                return result
+
             cid_match = fetch_cid_majority(
                 cas_number,
                 client=http_client,

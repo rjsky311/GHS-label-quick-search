@@ -79,7 +79,7 @@ from api_validation import (
     normalize_cas,
 )
 
-# Import expanded chemical dictionaries (1709 CAS entries, 1863 English entries)
+# Import expanded chemical dictionaries (1714 CAS entries, 1863 English entries)
 # + alias dictionaries for common/colloquial chemical names
 from chemical_dict import (
     CAS_TO_ZH, CAS_TO_EN, CHEMICAL_NAMES_ZH_EXPANDED,
@@ -87,6 +87,7 @@ from chemical_dict import (
 )
 from h_code_translations import H_CODE_MISSING_TEXT_ZH, H_CODE_TRANSLATIONS
 from p_code_translations import P_CODE_TRANSLATIONS, P_CODE_TEXTS_EN
+from reviewed_cas_resolutions import REVIEWED_CAS_RESOLUTIONS
 from export_helpers import (
     EXPORT_DATA_HEADERS,
     _add_export_pilot_summary_sheet,
@@ -1763,6 +1764,10 @@ async def get_cid_from_cas(cas_number: str, http_client: httpx.AsyncClient) -> O
       3. Only when every method returned a clean "no match" do we
          return `None` to mean "truly not in PubChem".
     """
+    # A reviewed row wins over everything PubChem's records say, and may be None.
+    if cas_number in REVIEWED_CAS_RESOLUTIONS:
+        return REVIEWED_CAS_RESOLUTIONS[cas_number]["cid"]
+
     # Check cache first
     if cas_number in cid_cache:
         return cid_cache[cas_number]

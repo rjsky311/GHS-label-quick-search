@@ -6,6 +6,7 @@ import sys
 import pytest
 
 from chemical_dict import CAS_TO_EN
+from reviewed_cas_resolutions import REVIEWED_CAS_RESOLUTIONS
 from seed_dictionary_identity_audit import (
     AUDIT_SOURCE,
     PubChemRateLimiter,
@@ -125,7 +126,7 @@ def test_normalize_identity_name_removes_parenthetical_alias_suffix_and_punctuat
 
 
 def test_reviewed_identity_exemption_list_matches_current_seed_names():
-    assert len(REVIEWED_IDENTITY_EXEMPTIONS) == 70
+    assert len(REVIEWED_IDENTITY_EXEMPTIONS) == 57
     allowed_categories = set(REVIEWED_IDENTITY_EXEMPTION_CATEGORIES)
     for cas_number, exemption in REVIEWED_IDENTITY_EXEMPTIONS.items():
         assert exemption["dictionary_name_en"] == CAS_TO_EN[cas_number]
@@ -520,3 +521,21 @@ def test_cli_help_is_available_without_network():
     assert "Seed dictionary identity audit" in result.stdout
     assert "--checkpoint" in result.stdout
     assert "--output-dir" in result.stdout
+
+
+def test_identity_audit_reports_the_record_the_site_uses_for_a_reviewed_cas():
+    class _NoNetwork:
+        def get(self, *_a, **_k):  # pragma: no cover - must not be called
+            raise AssertionError("a reviewed CAS should not ask PubChem")
+
+    pinned = audit_seed_entry("7704-34-9", CAS_TO_EN["7704-34-9"], client=_NoNetwork())
+    assert pinned["status"] == "reviewed_resolution"
+    assert pinned["cid"] == 5362487
+
+    absent = audit_seed_entry("9002-88-4", CAS_TO_EN["9002-88-4"], client=_NoNetwork())
+    assert absent["status"] == "reviewed_resolution"
+    assert absent["cid"] is None
+
+
+def test_a_cas_is_not_both_exempted_and_resolved():
+    assert not set(REVIEWED_IDENTITY_EXEMPTIONS) & set(REVIEWED_CAS_RESOLUTIONS)

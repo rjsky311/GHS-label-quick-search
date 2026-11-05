@@ -170,6 +170,7 @@ python scripts\audit_inventory_workbook.py <path-to-xlsx> --handoff-dir <output-
 python scripts\import_inventory_handoff.py <handoff-dir-or-audit-json>
 python scripts\import_inventory_handoff.py <handoff-dir-or-audit-json> --apply
 python scripts/audit_seed_dictionary_identity.py --output-dir <dir> --checkpoint <file>
+python scripts/audit_dictionary_resolution.py <dir>
 ```
 
 The inventory audit output is review-only. Use `summary`, `actionQueue`,
@@ -185,6 +186,15 @@ approved.
 Seed dictionary identity audit exemptions live in
 `backend/seed_dictionary_identity_exemptions.py`; a dictionary name change
 invalidates its exemption automatically.
+
+Before a release that touches lookup, the dictionary, or labels, run
+`scripts/audit_dictionary_resolution.py`. It runs the site's own search over
+every CAS a name can lead to, about 30 minutes against real PubChem, and exits
+non-zero if a row needs a person: a record that does not list the CAS, a hazard
+report that names something else, or a common reagent that changed. Wrong records
+go in `backend/reviewed_cas_resolutions.py`, which picks a PubChem record or none
+and never holds a classification. Flagged rows that are right anyway go in
+`backend/dictionary_audit_reviewed.py`.
 
 Docs-only baseline:
 
