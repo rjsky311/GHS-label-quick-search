@@ -1,8 +1,8 @@
 # Canonical build recipe for the ghs-backend container service.
 #
-# Zeabur's inline specification and a future Railway service should both stay
-# aligned with this file so Chromium, CJK fonts, and PDF rendering are never
-# silently omitted. Keep backend/Dockerfile in sync for local builds.
+# The Railway service builds from this file, so Chromium, CJK fonts, and PDF
+# rendering are never silently omitted. Keep backend/Dockerfile in sync for local
+# builds.
 FROM python:3.11-slim
 LABEL "language"="python"
 LABEL "framework"="fastapi"
