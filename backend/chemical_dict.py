@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 Chemical Dictionary - CAS to Name Mapping
-Total CAS to Chinese entries: 1709
-Total CAS to English entries: 1709
+Total CAS to Chinese entries: 1714
+Total CAS to English entries: 1714
 Total English to Chinese entries: 1863
 """
 
@@ -519,7 +519,6 @@ CAS_TO_ZH = {
     "1639-09-4": "1-庚硫醇",
     "16420-13-6": "二甲基硫代胺基甲醯氯",
     "1643-19-2": "四丁基溴化銨 (TBAB)",
-    "16448-28-5": "硫酸銅五水合物",
     "16454-60-7": "硝酸釹(III)六水合物",
     "166281-37-4": "2-溴-4,5-二氟苯酚",
     "166330-10-5": "雙[(2-二苯基膦)苯基]醚",
@@ -1039,6 +1038,7 @@ CAS_TO_ZH = {
     "5509-65-9": "2,6-二氟苯胺",
     "551-93-9": "2'-胺基苯乙酮",
     "552-89-6": "2-硝基苯甲醛",
+    "554-13-2": "碳酸鋰",
     "554-14-3": "2-甲基噻吩",
     "554-70-1": "三乙基膦",
     "554-84-7": "3-硝基苯酚",
@@ -1255,6 +1255,7 @@ CAS_TO_ZH = {
     "644-06-4": "早熟素 II",
     "646-07-1": "4-甲基戊酸",
     "64695-78-9": "1,2-二溴-4,5-二氟苯",
+    "64742-88-7": "礦油精",
     "6485-79-6": "三異丙基矽烷",
     "65-85-0": "苯甲酸",
     "65039-09-0": "1-乙基-3-甲基咪唑氯鹽 ([EMIM]Cl)",
@@ -1462,6 +1463,7 @@ CAS_TO_ZH = {
     "7758-89-6": "氯化亞銅",
     "7758-95-4": "氯化鉛",
     "7758-98-7": "硫酸銅 (無水)",
+    "7758-99-8": "硫酸銅五水合物",
     "7761-88-8": "硝酸銀",
     "77657-78-4": "(2E,4Z)-十一-2,4-二烯-1-醇",
     "7766-50-9": "11-溴-1-十一烯",
@@ -1519,9 +1521,13 @@ CAS_TO_ZH = {
     "79887-09-5": "1-丁基-4-乙炔基苯",
     "80-11-5": "N-甲基-N-亞硝基對甲苯磺醯胺 (Diazald)",
     "8000-28-0": "薰衣草油",
+    "8002-74-2": "石蠟",
+    "8006-64-2": "松節油",
     "8006-90-4": "薄荷油",
     "8007-02-1": "檸檬草油",
+    "8009-03-8": "凡士林",
     "8017-16-1": "多磷酸",
+    "8032-32-4": "石油醚",
     "8042-47-5": "礦物油",
     "81-30-1": "1,4,5,8-萘四甲酸二酐",
     "81-64-1": "奎茜 (1,4-二羥基蒽醌)",
@@ -1587,7 +1593,6 @@ CAS_TO_ZH = {
     "872-50-4": "N-甲基-2-吡咯烷酮 (NMP)",
     "873-74-5": "4-胺基苯甲腈",
     "87749-50-6": "四丁基氟化銨三水合物 (TBAF)",
-    "87890-91-3": "碳酸鋰",
     "879-05-0": "五氟苯基溴化鎂",
     "879643-71-7": "甲脒碘化銨 (FAI)",
     "88-15-3": "2-乙醯基噻吩",
@@ -2235,7 +2240,6 @@ CAS_TO_EN = {
     "1639-09-4": "1-Heptanethiol",
     "16420-13-6": "Dimethylthiocarbamoyl chloride",
     "1643-19-2": "Tetra-n-butylammonium bromide (TBAB)",
-    "16448-28-5": "Copper(II) sulfate pentahydrate",
     "16454-60-7": "Neodymium(III) nitrate hexahydrate",
     "166281-37-4": "2-Bromo-4,5-difluorophenol",
     "166330-10-5": "Bis[(2-diphenylphosphino)phenyl] ether (DPEphos)",
@@ -2755,6 +2759,7 @@ CAS_TO_EN = {
     "5509-65-9": "2,6-Difluoroaniline",
     "551-93-9": "2'-Aminoacetophenone",
     "552-89-6": "2-Nitrobenzaldehyde",
+    "554-13-2": "Lithium carbonate",
     "554-14-3": "2-Methylthiophene",
     "554-70-1": "Triethylphosphine",
     "554-84-7": "3-Nitrophenol",
@@ -2971,6 +2976,7 @@ CAS_TO_EN = {
     "644-06-4": "Precocene II (6,7-dimethoxy-2,2-dimethyl-3-chromene)",
     "646-07-1": "4-Methylvaleric acid",
     "64695-78-9": "1,2-Dibromo-4,5-difluorobenzene",
+    "64742-88-7": "Mineral spirits",
     "6485-79-6": "Triisopropylsilane",
     "65-85-0": "Benzoic acid",
     "65039-09-0": "1-Ethyl-3-methylimidazolium chloride",
@@ -3175,6 +3181,7 @@ CAS_TO_EN = {
     "7758-89-6": "Copper(I) chloride",
     "7758-95-4": "Lead(II) chloride",
     "7758-98-7": "Copper(II) sulfate (anhydrous)",
+    "7758-99-8": "Copper(II) sulfate pentahydrate",
     "7761-88-8": "Silver nitrate",
     "77657-78-4": "(2E,4Z)-Undeca-2,4-dien-1-ol",
     "7766-50-9": "11-Bromo-1-undecene",
@@ -3232,9 +3239,13 @@ CAS_TO_EN = {
     "79887-09-5": "1-Butyl-4-ethynylbenzene",
     "80-11-5": "N-Methyl-N-(p-tolylsulfonyl)nitrosamide",
     "8000-28-0": "Lavender oil",
+    "8002-74-2": "Paraffin wax",
+    "8006-64-2": "Turpentine oil",
     "8006-90-4": "Peppermint oil",
     "8007-02-1": "Lemongrass oil",
+    "8009-03-8": "Petrolatum",
     "8017-16-1": "Polyphosphoric acid",
+    "8032-32-4": "Petroleum ether",
     "8042-47-5": "Mineral oil",
     "81-30-1": "1,4,5,8-Naphthalenetetracarboxylic dianhydride",
     "81-64-1": "Quinizarin",
@@ -3300,7 +3311,6 @@ CAS_TO_EN = {
     "872-50-4": "N-Methyl-2-pyrrolidone (NMP)",
     "873-74-5": "4-Aminobenzonitrile",
     "87749-50-6": "Tetrabutylammonium fluoride trihydrate (TBAF)",
-    "87890-91-3": "Lithium carbonate",
     "879-05-0": "Pentafluorophenylmagnesium bromide",
     "879643-71-7": "Formamidinium iodide (FAI)",
     "88-15-3": "2-Acetylthiophene",

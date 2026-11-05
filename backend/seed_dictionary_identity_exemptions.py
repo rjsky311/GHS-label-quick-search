@@ -59,12 +59,6 @@ REVIEWED_IDENTITY_EXEMPTIONS: dict[str, dict[str, str]] = {
         "note": "PubChem title uses the mineral name malachite for basic copper carbonate.",
         "reviewed_at": "2026-07-06",
     },
-    "1330-20-7": {
-        "dictionary_name_en": "Xylenes",
-        "reason_category": "uvcb_or_mixture",
-        "note": "Mixed xylene CAS records can resolve to one xylene isomer in PubChem compounds.",
-        "reviewed_at": "2026-07-06",
-    },
     "13453-38-8": {
         "dictionary_name_en": "Thallium(III) nitrate",
         "reason_category": "naming_style",
@@ -143,12 +137,6 @@ REVIEWED_IDENTITY_EXEMPTIONS: dict[str, dict[str, str]] = {
         "note": "The polymer CAS resolves through PubChem to component or model compound records.",
         "reviewed_at": "2026-07-06",
     },
-    "25067-59-8": {
-        "dictionary_name_en": "Poly(9-vinylcarbazole)",
-        "reason_category": "polymer_monomer_record",
-        "note": "The polymer CAS resolves to the vinylcarbazole monomer record in PubChem.",
-        "reviewed_at": "2026-07-06",
-    },
     "25429-23-6": {
         "dictionary_name_en": "1,2-Dibromoethene (mixed isomers)",
         "reason_category": "uvcb_or_mixture",
@@ -217,12 +205,6 @@ REVIEWED_IDENTITY_EXEMPTIONS: dict[str, dict[str, str]] = {
         "note": "The chloroform adduct record resolves to the palladium dba component in PubChem.",
         "reviewed_at": "2026-07-06",
     },
-    "54193-36-1": {
-        "dictionary_name_en": "Poly(methacrylic acid, sodium salt)",
-        "reason_category": "polymer_monomer_record",
-        "note": "The polymer salt CAS resolves to the sodium methacrylate monomer record in PubChem.",
-        "reviewed_at": "2026-07-06",
-    },
     "56683-54-6": {
         "dictionary_name_en": "Cis-11-hexadecenol",
         "reason_category": "naming_style",
@@ -265,12 +247,6 @@ REVIEWED_IDENTITY_EXEMPTIONS: dict[str, dict[str, str]] = {
         "note": "PubChem title uses the equivalent diphenylmethylene anthracenone name.",
         "reviewed_at": "2026-07-06",
     },
-    "66796-30-3": {
-        "dictionary_name_en": "Perfluorosulfonic acid-PTFE copolymer",
-        "reason_category": "uvcb_or_mixture",
-        "note": "Nafion-like copolymer records do not fit PubChem's single-compound title model.",
-        "reviewed_at": "2026-07-06",
-    },
     "67485-29-4": {
         "dictionary_name_en": "Hydramethylnon",
         "reason_category": "naming_style",
@@ -289,12 +265,6 @@ REVIEWED_IDENTITY_EXEMPTIONS: dict[str, dict[str, str]] = {
         "note": "PubChem title expands the lithium acetylide ethylenediamine coordination name.",
         "reviewed_at": "2026-07-06",
     },
-    "70693-62-8": {
-        "dictionary_name_en": "Potassium peroxymonosulfate (Oxone)",
-        "reason_category": "uvcb_or_mixture",
-        "note": "Oxone is a mixed salt product and PubChem resolves the record to potassium caroate.",
-        "reviewed_at": "2026-07-06",
-    },
     "70955-01-0": {
         "dictionary_name_en": "Molecular sieves",
         "reason_category": "uvcb_or_mixture",
@@ -307,12 +277,6 @@ REVIEWED_IDENTITY_EXEMPTIONS: dict[str, dict[str, str]] = {
         "note": "PubChem title uses bracketed dppf palladium dichloride coordination notation.",
         "reviewed_at": "2026-07-06",
     },
-    "7440-44-0": {
-        "dictionary_name_en": "Active charcoal (Activated carbon)",
-        "reason_category": "pubchem_depositor_quirk",
-        "note": "PubChem depositor records map elemental carbon material CAS to methane as the majority compound title.",
-        "reviewed_at": "2026-07-06",
-    },
     "7646-78-8": {
         "dictionary_name_en": "Stannic chloride (Tin(IV) chloride)",
         "reason_category": "naming_style",
@@ -323,12 +287,6 @@ REVIEWED_IDENTITY_EXEMPTIONS: dict[str, dict[str, str]] = {
         "dictionary_name_en": "(2E,4Z)-Undeca-2,4-dien-1-ol",
         "reason_category": "insufficient_evidence_deferred",
         "note": "The isomer mismatch rests on a single PubChem depositor record and awaits SDS or supplier evidence.",
-        "reviewed_at": "2026-07-06",
-    },
-    "7782-42-5": {
-        "dictionary_name_en": "Graphite, amorphous",
-        "reason_category": "pubchem_depositor_quirk",
-        "note": "PubChem depositor records map graphite material CAS to methane as the majority compound title.",
         "reviewed_at": "2026-07-06",
     },
     "7784-27-2": {
@@ -367,12 +325,6 @@ REVIEWED_IDENTITY_EXEMPTIONS: dict[str, dict[str, str]] = {
         "note": "Mineral oil is a UVCB petroleum material and PubChem compound titles can reflect unrelated depositor components.",
         "reviewed_at": "2026-07-06",
     },
-    "84787-70-2": {
-        "dictionary_name_en": "Sandalwood oil",
-        "reason_category": "uvcb_or_mixture",
-        "note": "Essential oil records can resolve to non-representative component compound titles in PubChem.",
-        "reviewed_at": "2026-07-06",
-    },
     "868-85-9": {
         "dictionary_name_en": "Dimethyl phosphonate",
         "reason_category": "naming_style",
@@ -383,36 +335,6 @@ REVIEWED_IDENTITY_EXEMPTIONS: dict[str, dict[str, str]] = {
         "dictionary_name_en": "Formamidinium iodide (FAI)",
         "reason_category": "naming_style",
         "note": "PubChem title expresses FAI as methanimidamide hydroiodide.",
-        "reviewed_at": "2026-07-06",
-    },
-    "9002-83-9": {
-        "dictionary_name_en": "Halocarbon Oil 700",
-        "reason_category": "polymer_monomer_record",
-        "note": "The fluorocarbon oil polymer record resolves to chlorotrifluoroethylene in PubChem.",
-        "reviewed_at": "2026-07-06",
-    },
-    "9002-88-4": {
-        "dictionary_name_en": "Poly(ethylene)",
-        "reason_category": "polymer_monomer_record",
-        "note": "The polymer CAS resolves to the ethylene monomer record in PubChem.",
-        "reviewed_at": "2026-07-06",
-    },
-    "9002-89-5": {
-        "dictionary_name_en": "Poly(vinyl alcohol)",
-        "reason_category": "polymer_monomer_record",
-        "note": "The polymer CAS resolves to the vinyl alcohol monomer record in PubChem.",
-        "reviewed_at": "2026-07-06",
-    },
-    "9011-14-7": {
-        "dictionary_name_en": "Poly(methyl methacrylate) (PMMA)",
-        "reason_category": "polymer_monomer_record",
-        "note": "The polymer CAS resolves to methyl methacrylate monomer records in PubChem.",
-        "reviewed_at": "2026-07-06",
-    },
-    "9037-24-5": {
-        "dictionary_name_en": "Ion-exchange resin",
-        "reason_category": "uvcb_or_mixture",
-        "note": "Ion-exchange resin materials do not fit PubChem's single-compound title model.",
         "reviewed_at": "2026-07-06",
     },
     "941689-36-7": {

@@ -79,7 +79,7 @@ from api_validation import (
     normalize_cas,
 )
 
-# Import expanded chemical dictionaries (1709 CAS entries, 1863 English entries)
+# Import expanded chemical dictionaries (1714 CAS entries, 1863 English entries)
 # + alias dictionaries for common/colloquial chemical names
 from chemical_dict import (
     CAS_TO_ZH, CAS_TO_EN, CHEMICAL_NAMES_ZH_EXPANDED,
@@ -87,6 +87,7 @@ from chemical_dict import (
 )
 from h_code_translations import H_CODE_MISSING_TEXT_ZH, H_CODE_TRANSLATIONS
 from p_code_translations import P_CODE_TRANSLATIONS, P_CODE_TEXTS_EN
+from reviewed_cas_resolutions import REVIEWED_CAS_RESOLUTIONS, foreign_report_numbers
 from export_helpers import (
     EXPORT_DATA_HEADERS,
     _add_export_pilot_summary_sheet,
@@ -214,6 +215,15 @@ def _ghs_cache_entry_size(value: tuple) -> int:
 
 # CID lookup remains entry-bounded; GHS payloads are byte-bounded.
 cid_cache: TTLCache = TTLCache(maxsize=5000, ttl=86400)
+# (ranked substance records, earliest record's CID) per CAS, for looking past a top
+# record with no GHS data.
+cid_candidates: TTLCache = TTLCache(maxsize=5000, ttl=86400)
+# A runner-up record may stand in only with real support. Below a quarter of the
+# top record's votes, the records of a CAS start to include unrelated compounds:
+# for polyethylenimine (25987-06-8), a nitrile at 4 votes against 17.
+CID_ALTERNATE_MIN_VOTES = 3
+CID_ALTERNATE_MIN_SHARE = 0.25
+CID_ALTERNATE_MAX_TRIES = 4
 ghs_cache: TTLCache = TTLCache(
     maxsize=GHS_CACHE_MAX_BYTES,
     ttl=86400,
@@ -1293,6 +1303,7 @@ def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
         return []
 
     record = _ghs_payload_mapping(ghs_data.get("Record"), "Record")
+    foreign_reports = foreign_report_numbers(record)
     
     try:
         sections = _ghs_payload_optional_list(record, "Section", "Record.Section")
@@ -1352,6 +1363,8 @@ def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
                                         raw_info,
                                         f"GHS Classification.Information[{info_index}]",
                                     )
+                                    if foreign_reports and info.get("ReferenceNumber") in foreign_reports:
+                                        continue
                                     info_name = _ghs_payload_optional_string(
                                         info,
                                         "Name",
@@ -1588,15 +1601,155 @@ async def _try_cid_by_xref(cas_number: str, http_client: httpx.AsyncClient) -> O
             return cids[0]
     return None
 
+def _rank_substance_cids(records: list) -> list:
+    """Rank the CIDs of a CAS's PubChem substance records, most records first.
+
+    The first record is not a reliable answer. For 7697-37-2 it is nitrite
+    (CID 946, one record) while 213 records say nitric acid (CID 944), and
+    nitrite has no GHS data, so taking the first record drops the hazards of
+    the acid. Ties keep the CID of the earliest record.
+
+    Returns a list of (cid, votes).
+    """
+    votes: Counter = Counter()
+    for record in records:
+        field = record.get("CID")
+        if field:
+            votes.update(field if isinstance(field, list) else [field])
+    return votes.most_common()
+
+
+def _earliest_substance_cid(records: list) -> Optional[int]:
+    """The CID of the first substance record that names one."""
+    for record in records:
+        field = record.get("CID")
+        if field:
+            return field[0] if isinstance(field, list) else field
+    return None
+
+
 async def _try_cid_by_substance(cas_number: str, http_client: httpx.AsyncClient) -> Optional[int]:
     """CID lookup Method 3: Search via substance xref."""
     url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/substance/xref/rn/{cas_number}/cids/JSON"
     status, data = await pubchem_get_json(http_client, url, timeout=15.0)
     if status == 200 and data:
-        info = data.get("InformationList", {}).get("Information", [])
-        if info and info[0].get("CID"):
-            cid_field = info[0]["CID"]
-            return cid_field[0] if isinstance(cid_field, list) else cid_field
+        records = data.get("InformationList", {}).get("Information", [])
+        ranked = _rank_substance_cids(records)
+        if ranked:
+            cid_candidates[cas_number] = (ranked, _earliest_substance_cid(records))
+            return ranked[0][0]
+    return None
+
+
+async def _get_identity(cid: int, http_client: httpx.AsyncClient) -> Optional[tuple]:
+    """(molecular formula, defined stereocenters) of a compound record, or None."""
+    url = (
+        f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}"
+        "/property/MolecularFormula,DefinedAtomStereoCount/JSON"
+    )
+    status, data = await pubchem_get_json(http_client, url, timeout=15.0)
+    if status == 200 and data:
+        properties = data.get("PropertyTable", {}).get("Properties", [])
+        if properties:
+            return properties[0].get("MolecularFormula"), properties[0].get("DefinedAtomStereoCount", 0)
+    return None
+
+
+def _same_formula_core(first: Optional[str], second: Optional[str]) -> bool:
+    """True if two formulas differ only by hydrogens and whole waters.
+
+    Records of one substance can differ that way (a hydrate, a protonation
+    state, or a depositor leaving out hydrogens). A different stoichiometry or
+    oxidation of the core does not pass: Pd(dba)2 is not Pd2(dba)3, and Na2S is
+    not Na2SO4.
+    """
+    if not first or not second:
+        return False
+    counts = []
+    for formula in (first, second):
+        count: Counter = Counter()
+        for element, amount in re.findall(r"([A-Z][a-z]?)(\d*)", formula):
+            count[element] += int(amount or 1)
+        counts.append(count)
+    more, less = counts if counts[0]["O"] >= counts[1]["O"] else reversed(counts)
+    if any(more[element] != less[element] for element in (set(more) | set(less)) - {"H", "O"}):
+        return False
+    extra_oxygen = more["O"] - less["O"]
+    return extra_oxygen == 0 or more["H"] - less["H"] >= 2 * extra_oxygen
+
+
+def _same_identity(first: Optional[tuple], second: Optional[tuple]) -> bool:
+    """True if two records can be one substance: same formula core and stereocenters.
+
+    A record with no stereocenters does not vouch for biotin, which has three.
+    Double-bond geometry is left out because depositors differ in drawing it:
+    the records of Pd2(dba)3 and hydramethylnon differ only there, and the CAS
+    of mixed 1,2-dibromoethene has a top record drawn as E.
+
+    This is a filter, not proof. An isomer with the same counts passes.
+    """
+    if not first or not second:
+        return False
+    return first[1] == second[1] and _same_formula_core(first[0], second[0])
+
+
+async def _find_alternate_with_ghs(
+    cas_number: str,
+    cid: int,
+    http_client: httpx.AsyncClient,
+) -> Optional[tuple]:
+    """Look past a top-ranked record that has no GHS data.
+
+    PubChem can hold the classification on a sibling record of the same CAS:
+    sodium cyanoborohydride is 47 votes for a record without GHS data and 46
+    for the one with it. Candidates, in order: the record PubChem's name
+    lookup picks, if a substance record links it to this CAS, then runners-up
+    with real support, then the earliest record whatever its votes: nickel
+    formate dihydrate keeps its EU carcinogen classification on a record with
+    4 of 18 votes. A candidate must also match the top record (see
+    _same_identity). A CAS with no such candidate stays on the top record,
+    which the site reports as "no GHS data, check the SDS". That is safer than
+    showing the hazards of a compound that may be a different substance.
+
+    Transient failures propagate, and leave the candidates in place for the
+    retry. A found alternate leaves them too, so a concurrent search for the
+    same CAS, still holding the top record, reaches the same answer.
+    Returns (cid, ghs_data, cache_hit, retrieved_at, reports) or None.
+    """
+    candidates = cid_candidates.get(cas_number)
+    if not candidates or candidates[0][0][0] != cid:
+        return None
+    ranked, earliest = candidates
+
+    named = await _try_cid_by_name(cas_number, http_client)
+    alternates = []
+    if named != cid and any(candidate == named for candidate, _ in ranked):
+        alternates.append(named)
+    top_votes = ranked[0][1]
+    alternates += [
+        candidate
+        for candidate, votes in ranked[1:]
+        if candidate != named
+        and votes >= CID_ALTERNATE_MIN_VOTES
+        and votes >= top_votes * CID_ALTERNATE_MIN_SHARE
+    ]
+    alternates = alternates[:CID_ALTERNATE_MAX_TRIES]
+    if earliest != cid and earliest not in alternates:
+        alternates.append(earliest)
+
+    top_identity = None
+    for alternate in alternates:
+        ghs_data, cache_hit, retrieved_at = await get_ghs_classification(alternate, http_client)
+        reports = extract_all_ghs_classifications(ghs_data)
+        if not reports:
+            continue
+        top_identity = top_identity or await _get_identity(cid, http_client)
+        if _same_identity(top_identity, await _get_identity(alternate, http_client)):
+            cid_cache[cas_number] = alternate
+            return alternate, ghs_data, cache_hit, retrieved_at, reports
+
+    # A clean miss: the top record stays cached, so do not ask again per search.
+    cid_candidates.pop(cas_number, None)
     return None
 
 async def get_cid_from_cas(cas_number: str, http_client: httpx.AsyncClient) -> Optional[int]:
@@ -1604,19 +1757,20 @@ async def get_cid_from_cas(cas_number: str, http_client: httpx.AsyncClient) -> O
 
     Policy for a safety-critical tool:
 
-      1. If any method returns an int, use it.
-      2. Otherwise, if ANY method (primary or alt-CAS fallback) raised
-         `PubChemError` — i.e. at least one endpoint transiently failed
-         — the "not found" conclusion is not trustworthy, so we raise
-         `PubChemError` and let the caller surface `upstream_error=True`.
+      1. Use the first method that returns an int: substance records, then
+         compound xref, then name, then the alternate CAS format.
+      2. A transient failure on any method raises `PubChemError` at once and
+         caches nothing, and the caller surfaces `upstream_error=True`. A
+         later method might still answer, but differently: 7697-37-2 becomes
+         nitrate through the compound xref, and that answer would stay cached
+         for a day. Nor can a failed method support "not found".
       3. Only when every method returned a clean "no match" do we
          return `None` to mean "truly not in PubChem".
-
-    Previously the function only raised when ALL three primary methods
-    were transient failures, which let the mixed case through
-    (e.g. one 404 + two 503) and could present a transient outage as a
-    confirmed absence. That is unsafe for a GHS lookup tool.
     """
+    # A reviewed row wins over everything PubChem's records say, and may be None.
+    if cas_number in REVIEWED_CAS_RESOLUTIONS:
+        return REVIEWED_CAS_RESOLUTIONS[cas_number]["cid"]
+
     # Check cache first
     if cas_number in cid_cache:
         return cid_cache[cas_number]
@@ -1626,39 +1780,19 @@ async def get_cid_from_cas(cas_number: str, http_client: httpx.AsyncClient) -> O
     # return related ions/salts first for ambiguous substances (for
     # example 7647-01-0 can surface chloride/CID 312 before the acid
     # record), which then changes the entire GHS label.
-    primary_had_transient = False
     for lookup in (_try_cid_by_substance, _try_cid_by_xref, _try_cid_by_name):
-        try:
-            cid = await lookup(cas_number, http_client)
-        except PubChemError:
-            primary_had_transient = True
-            continue
+        cid = await lookup(cas_number, http_client)
         if cid:
             cid_cache[cas_number] = cid
             return cid
 
     # Method 4 (fallback): alternate CAS format (strip leading zeros).
-    # We attempt it whether or not the primary results had transient
-    # failures — it might still succeed and give us a definitive CID.
-    fallback_had_transient = False
     cas_alt = re.sub(r'^0+', '', cas_number.split('-')[0]) + '-' + '-'.join(cas_number.split('-')[1:])
     if cas_alt != cas_number:
-        try:
-            cid = await _try_cid_by_name(cas_alt, http_client)
-        except PubChemError:
-            cid = None
-            fallback_had_transient = True
+        cid = await _try_cid_by_name(cas_alt, http_client)
         if cid:
             cid_cache[cas_number] = cid
             return cid
-
-    # No CID found anywhere. If ANY attempt (primary or fallback) was
-    # a transient failure, refuse to commit to "not found".
-    if primary_had_transient or fallback_had_transient:
-        raise PubChemError(
-            f"CID lookup for {cas_number} had partial upstream failures; "
-            "cannot confirm not-found."
-        )
 
     logger.info(f"PubChem has no CID for CAS number: {cas_number}")
     return None
@@ -1949,6 +2083,18 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
         # Keep structural payload failures inside the same fail-closed boundary
         # as fetch failures, including malformed data already present in cache.
         all_classifications = extract_all_ghs_classifications(ghs_data)
+
+        if not all_classifications:
+            alternate = await _find_alternate_with_ghs(normalized_cas, cid, http_client)
+            if alternate:
+                cid, ghs_data, cache_hit, retrieved_at, all_classifications = alternate
+                if not (name_en_from_cas and name_zh_from_cas):
+                    name_en, name_zh = await get_compound_name(
+                        cid,
+                        http_client,
+                        known_zh=name_zh_from_cas,
+                        cas_number=normalized_cas,
+                    )
     except PubChemError as e:
         logger.warning(f"PubChem unavailable during GHS lookup for CID {cid}: {e}")
         return ChemicalResult(

@@ -47,7 +47,7 @@ stay under the owner's control.
   [DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md](../DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md))
   and are enforced by tests. For example, printing is blocked when a required
   GHS pictogram fails to load.
-- **Tests at every layer.** About 500 backend tests, about 1,550 frontend
+- **Tests at every layer.** About 600 backend tests, about 1,580 frontend
   test cases, plus checks for docs drift, English/Chinese text parity, bundle
   size, and the print contract, all in CI.
 - **Evidence-gated releases.** A release counts only when the frontend build and

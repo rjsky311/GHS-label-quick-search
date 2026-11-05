@@ -2829,6 +2829,529 @@ async def test_get_cid_prefers_cas_specific_substance_result_over_name_candidate
     assert await srv.get_cid_from_cas(cas, http_client=None) == 313
 
 
+async def test_substance_lookup_takes_the_cid_most_records_agree_on(monkeypatch):
+    """The first substance record can be a related ion with no GHS data.
+
+    Order as PubChem returned it for 7697-37-2 on 2026-11-05: the first of
+    215 records is nitrite (CID 946) and 213 records are nitric acid (CID 944).
+    Taking the first record showed nitric acid with no hazards at all.
+    """
+    import server as srv
+
+    records = [{"SID": 3010, "CID": [946]}]
+    records += [{"SID": 3543 + index, "CID": [944]} for index in range(4)]
+    records += [{"SID": 9000, "CID": [943]}]
+
+    async def _fake_get_json(*_a, **_k):
+        return 200, {"InformationList": {"Information": records}}
+
+    monkeypatch.setattr(srv, "pubchem_get_json", _fake_get_json)
+
+    assert await srv._try_cid_by_substance("7697-37-2", None) == 944
+    assert srv.cid_candidates["7697-37-2"] == ([(944, 4), (946, 1), (943, 1)], 946)
+
+
+def test_earliest_substance_cid_edge_cases():
+    import server as srv
+
+    assert srv._earliest_substance_cid([]) is None
+    assert srv._earliest_substance_cid([{"SID": 1}, {"SID": 2, "CID": []}]) is None
+    assert srv._earliest_substance_cid([{"SID": 1}, {"SID": 2, "CID": [702, 5]}]) == 702
+    assert srv._earliest_substance_cid([{"SID": 1, "CID": 702}]) == 702
+
+
+async def test_get_identity_reads_formula_and_stereocenters(monkeypatch):
+    import server as srv
+
+    responses = {
+        171548: (200, {"PropertyTable": {"Properties": [
+            {"CID": 171548, "MolecularFormula": "C10H16N2O3S", "DefinedAtomStereoCount": 3},
+        ]}}),
+        24288: (200, {"PropertyTable": {"Properties": [
+            {"CID": 24288, "MolecularFormula": "Cl2Co"},
+        ]}}),
+        1: (404, None),
+        2: (200, {"PropertyTable": {"Properties": []}}),
+    }
+
+    async def _fake_get_json(_client, url, **_k):
+        assert "DefinedAtomStereoCount" in url
+        return responses[int(url.split("/cid/")[1].split("/")[0])]
+
+    monkeypatch.setattr(srv, "pubchem_get_json", _fake_get_json)
+
+    assert await srv._get_identity(171548, None) == ("C10H16N2O3S", 3)
+    assert await srv._get_identity(24288, None) == ("Cl2Co", 0)
+    assert await srv._get_identity(1, None) is None
+    assert await srv._get_identity(2, None) is None
+
+
+def test_rank_substance_cids_edge_cases():
+    import server as srv
+
+    assert srv._rank_substance_cids([]) == []
+    assert srv._rank_substance_cids([{"SID": 1}, {"SID": 2, "CID": []}]) == []
+    # A record without a CID must not hide the records after it.
+    assert srv._rank_substance_cids([{"SID": 1}, {"SID": 2, "CID": [702]}]) == [(702, 1)]
+    # PubChem can return a bare integer instead of a list.
+    assert srv._rank_substance_cids([{"SID": 1, "CID": 702}]) == [(702, 1)]
+    # A tie keeps the earliest record, so single-record results do not move.
+    assert srv._rank_substance_cids([{"CID": [5]}, {"CID": [3]}]) == [(5, 1), (3, 1)]
+
+
+def _report_for(cid):
+    return [{"pictograms": [{"code": "GHS06"}], "source": f"record {cid}"}]
+
+
+def _stub_records(monkeypatch, *, with_ghs, name_cid=None, formulas=None, stereo=None):
+    """Stub PubChem so only the CIDs in `with_ghs` have GHS data.
+
+    Every record has the same formula and no stereocenters unless `formulas`
+    or `stereo` says otherwise.
+    """
+    import server as srv
+
+    calls = {"name": 0, "ghs": []}
+
+    async def _fake_identity(cid, *_a, **_k):
+        return (formulas or {}).get(cid, "C2H4O2"), (stereo or {}).get(cid, 0)
+
+    monkeypatch.setattr(srv, "_get_identity", _fake_identity)
+
+    async def _fake_name(*_a, **_k):
+        calls["name"] += 1
+        return name_cid
+
+    async def _fake_ghs(cid, *_a, **_k):
+        calls["ghs"].append(cid)
+        return ({"cid": cid} if cid in with_ghs else {}, False, "2026-11-05T00:00:00+00:00")
+
+    def _fake_extract(data):
+        return _report_for(data["cid"]) if data else []
+
+    monkeypatch.setattr(srv, "_try_cid_by_name", _fake_name)
+    monkeypatch.setattr(srv, "get_ghs_classification", _fake_ghs)
+    monkeypatch.setattr(srv, "extract_all_ghs_classifications", _fake_extract)
+    return calls
+
+
+def _seed_candidates(cas, ranked, earliest=None):
+    import server as srv
+
+    srv.cid_cache[cas] = ranked[0][0]
+    srv.cid_candidates[cas] = (ranked, earliest or ranked[0][0])
+
+
+async def test_top_record_without_ghs_gives_way_to_the_record_name_lookup_picks(monkeypatch):
+    """Sodium cyanoborohydride: 47 votes without GHS data, 46 with it."""
+    import server as srv
+
+    cas = "25895-60-7"
+    _seed_candidates(cas, [(20587905, 47), (5003444, 46), (66133, 1)])
+    _stub_records(monkeypatch, with_ghs={5003444, 66133}, name_cid=5003444)
+
+    result = await srv.search_chemical(cas, None)
+
+    assert result.cid == 5003444
+    assert result.found is True
+    assert srv.cid_cache[cas] == 5003444
+
+
+async def test_top_record_without_ghs_gives_way_to_a_well_supported_runner_up(monkeypatch):
+    """Hydrogen tetrachloroaurate: name lookup finds nothing, 18 of 20 votes do."""
+    import server as srv
+
+    cas = "16961-25-4"
+    _seed_candidates(cas, [(21863413, 20), (44134746, 18), (129897181, 4)])
+    _stub_records(monkeypatch, with_ghs={44134746})
+
+    result = await srv.search_chemical(cas, None)
+
+    assert result.cid == 44134746
+
+
+async def test_weakly_supported_record_does_not_stand_in_for_the_top_one(monkeypatch):
+    """Polyethylenimine: the runner-up with GHS data is an unrelated nitrile."""
+    import server as srv
+
+    cas = "25987-06-8"
+    _seed_candidates(cas, [(168453, 17), (86276476, 16), (211339, 4)])
+    calls = _stub_records(monkeypatch, with_ghs={211339})
+
+    result = await srv.search_chemical(cas, None)
+
+    assert result.cid == 168453
+    assert result.found is True
+    assert result.ghs_pictograms == []
+    assert 211339 not in calls["ghs"]
+
+
+async def test_runner_up_needs_three_votes_even_when_the_share_is_high(monkeypatch):
+    import server as srv
+
+    cas = "24979-70-2"
+    _seed_candidates(cas, [(154805965, 4), (62453, 2)])
+    calls = _stub_records(monkeypatch, with_ghs={62453})
+
+    result = await srv.search_chemical(cas, None)
+
+    assert result.cid == 154805965
+    assert 62453 not in calls["ghs"]
+
+
+async def test_name_lookup_record_must_be_linked_to_the_cas(monkeypatch):
+    """A name match no substance record links to this CAS is not trusted."""
+    import server as srv
+
+    cas = "16949-15-8"
+    _seed_candidates(cas, [(20722760, 37)])
+    calls = _stub_records(monkeypatch, with_ghs={999}, name_cid=999)
+
+    result = await srv.search_chemical(cas, None)
+
+    assert result.cid == 20722760
+    assert 999 not in calls["ghs"]
+
+
+async def test_clean_miss_does_not_repeat_the_name_lookup(monkeypatch):
+    """Glycine really has no GHS data; each search must not ask PubChem again."""
+    import server as srv
+
+    cas = "56-40-6"
+    _seed_candidates(cas, [(750, 263)])
+    calls = _stub_records(monkeypatch, with_ghs=set(), name_cid=750)
+
+    await srv.search_chemical(cas, None)
+    await srv.search_chemical(cas, None)
+
+    assert calls["name"] == 1
+
+
+async def test_alternate_outage_reports_upstream_error_and_can_retry(monkeypatch):
+    """An outage while looking past the top record must not read as no hazards."""
+    import server as srv
+
+    cas = "7646-79-9"
+    _seed_candidates(cas, [(24288, 52), (3032536, 49)])
+    _stub_records(monkeypatch, with_ghs={3032536}, name_cid=3032536)
+    healthy_ghs = srv.get_ghs_classification
+
+    async def _alternate_down(cid, *a, **k):
+        if cid == 3032536:
+            raise PubChemError("HTTP 503 after retries")
+        return await healthy_ghs(cid, *a, **k)
+
+    monkeypatch.setattr(srv, "get_ghs_classification", _alternate_down)
+
+    result = await srv.search_chemical(cas, None)
+
+    assert result.found is False
+    assert result.upstream_error is True
+
+    monkeypatch.setattr(srv, "get_ghs_classification", healthy_ghs)
+    retried = await srv.search_chemical(cas, None)
+
+    assert retried.found is True
+    assert retried.cid == 3032536
+
+
+async def test_runtime_and_identity_audit_pick_the_same_cid(monkeypatch):
+    """The dictionary audit checks identity by majority. The runtime must agree.
+
+    They disagreed until 2026-11-05: the audit passed nitric acid against
+    CID 944 while the site served CID 946.
+    """
+    import server as srv
+    from seed_dictionary_identity_audit import _extract_substance_cids, _majority_cid
+
+    payload = {
+        "InformationList": {
+            "Information": [
+                {"SID": 1, "CID": [175]},
+                {"SID": 2, "CID": [176]},
+                {"SID": 3, "CID": [176]},
+                {"SID": 4, "CID": [21980959]},
+            ]
+        }
+    }
+
+    async def _fake_get_json(*_a, **_k):
+        return 200, payload
+
+    monkeypatch.setattr(srv, "pubchem_get_json", _fake_get_json)
+
+    audit_choice = _majority_cid(_extract_substance_cids(payload), "substance_xref_rn")
+    assert await srv._try_cid_by_substance("64-19-7", None) == audit_choice["cid"] == 176
+
+
+@pytest.mark.parametrize(
+    "first,second,expected",
+    [
+        ("C10H10Fe", "C10H10Fe", True),
+        # Depositors leave out hydrogens, and hydrates differ by whole waters.
+        ("Cl3Si", "Cl3HSi", True),
+        ("Cl2H4O2Sn", "Cl2H2OSn", True),
+        ("H6N3O12Tl", "H12N3O15Tl", True),
+        ("H3Na2OS+", "HNa2S+", True),
+        # Different stoichiometry of the core: Pd2(dba)3 is not Pd(dba)2.
+        ("C51H42O3Pd2", "C34H28O2Pd", False),
+        ("C9H30O2Si3", "C7H21O2Si3", False),
+        ("H3O9P3", "H3O4P", False),
+        # Oxygen that is not water: sulfide is not sulfate, nitrite is not nitrate.
+        ("Na2S", "Na2O4S", False),
+        ("NNaO2", "NNaO3", False),
+        # Different element.
+        ("C4H10O", "C4H10S", False),
+        (None, "C2H6O", False),
+        ("C2H6O", None, False),
+        ("", "", False),
+    ],
+)
+def test_same_formula_core(first, second, expected):
+    import server as srv
+
+    assert srv._same_formula_core(first, second) is expected
+
+
+async def test_runner_up_with_a_different_formula_does_not_stand_in(monkeypatch):
+    """Poly(methylhydrosiloxane): 6 of 12 votes are a fixed small trisiloxane."""
+    import server as srv
+
+    cas = "63148-57-2"
+    _seed_candidates(cas, [(16211393, 12), (6327366, 6)])
+    _stub_records(
+        monkeypatch,
+        with_ghs={6327366},
+        formulas={16211393: "C9H30O2Si3", 6327366: "C7H21O2Si3"},
+    )
+
+    result = await srv.search_chemical(cas, None)
+
+    assert result.cid == 16211393
+    assert srv.cid_cache[cas] == 16211393
+
+
+async def test_name_lookup_record_with_a_different_formula_does_not_stand_in(monkeypatch):
+    """Pd2(dba)3 chloroform adduct: name lookup picks Pd(dba)2, 14 of 24 votes."""
+    import server as srv
+
+    cas = "52409-22-0"
+    _seed_candidates(cas, [(9811564, 24), (6505921, 14)])
+    _stub_records(
+        monkeypatch,
+        with_ghs={6505921},
+        name_cid=6505921,
+        formulas={9811564: "C51H42O3Pd2", 6505921: "C34H28O2Pd"},
+    )
+
+    result = await srv.search_chemical(cas, None)
+
+    assert result.cid == 9811564
+
+
+async def test_alternate_without_the_stereocenters_does_not_stand_in(monkeypatch):
+    """Biotin: the record with GHS data leaves all three stereocenters undefined."""
+    import server as srv
+
+    cas = "58-85-5"
+    _seed_candidates(cas, [(171548, 211), (253, 60)], earliest=6560210)
+    _stub_records(
+        monkeypatch,
+        with_ghs={253},
+        name_cid=253,
+        formulas={171548: "C10H16N2O3S", 253: "C10H16N2O3S"},
+        stereo={171548: 3},
+    )
+
+    result = await srv.search_chemical(cas, None)
+
+    assert result.cid == 171548
+    assert result.ghs_pictograms == []
+
+
+async def test_earliest_record_stands_in_below_the_vote_floor(monkeypatch):
+    """Nickel formate dihydrate: the carcinogen classification sits at 4 of 18 votes."""
+    import server as srv
+
+    cas = "15694-70-9"
+    _seed_candidates(cas, [(12598460, 18), (27506, 4)], earliest=27506)
+    _stub_records(
+        monkeypatch,
+        with_ghs={27506},
+        formulas={12598460: "C2H6NiO6", 27506: "C2H2NiO4"},
+    )
+
+    result = await srv.search_chemical(cas, None)
+
+    assert result.cid == 27506
+    assert srv.cid_cache[cas] == 27506
+
+
+async def test_earliest_record_outside_the_top_ranks_is_still_tried(monkeypatch):
+    """Basic copper carbonate: the record with EU data has one vote of many."""
+    import server as srv
+
+    cas = "12069-69-1"
+    _seed_candidates(cas, [(25503, 16), (10922056, 8)], earliest=156614043)
+    _stub_records(
+        monkeypatch,
+        with_ghs={156614043},
+        formulas={25503: "CH2Cu2O5", 10922056: "CH4Cu2O5", 156614043: "CH2Cu2O5-4"},
+    )
+
+    result = await srv.search_chemical(cas, None)
+
+    assert result.cid == 156614043
+
+
+@pytest.mark.parametrize(
+    "cas,top,earliest,formulas,stereo",
+    [
+        # A monomer's hazards are not the polymer's.
+        ("24979-70-2", 154805965, 62453, {154805965: "C10H17NO", 62453: "C8H8O"}, {}),
+        # Beta-D-glucose carries glucose oxidase's H334; D-glucose is not classified.
+        ("50-99-7", 107526, 64689, {107526: "C6H12O6", 64689: "C6H12O6"}, {107526: 4, 64689: 5}),
+    ],
+)
+async def test_earliest_record_still_has_to_match_the_top_one(
+    monkeypatch, cas, top, earliest, formulas, stereo
+):
+    import server as srv
+
+    _seed_candidates(cas, [(top, 9), (earliest, 2)], earliest=earliest)
+    _stub_records(monkeypatch, with_ghs={earliest}, formulas=formulas, stereo=stereo)
+
+    result = await srv.search_chemical(cas, None)
+
+    assert result.cid == top
+    assert result.ghs_pictograms == []
+
+
+async def test_earliest_record_is_tried_past_the_cap(monkeypatch):
+    import server as srv
+
+    cas = "8007-02-1"
+    ranked = [(100, 10)] + [(200 + index, 10) for index in range(20)]
+    _seed_candidates(cas, ranked, earliest=999)
+    calls = _stub_records(monkeypatch, with_ghs={999})
+
+    result = await srv.search_chemical(cas, None)
+
+    assert calls["ghs"] == [100, 200, 201, 202, 203, 999]
+    assert result.cid == 999
+
+
+async def test_alternates_tried_are_capped(monkeypatch):
+    """Many records tied on votes must not turn one search into a burst."""
+    import server as srv
+
+    cas = "8007-02-1"
+    _seed_candidates(cas, [(100, 10)] + [(200 + index, 10) for index in range(20)])
+    calls = _stub_records(monkeypatch, with_ghs=set())
+
+    await srv.search_chemical(cas, None)
+
+    assert calls["ghs"] == [100, 200, 201, 202, 203]
+
+
+async def test_concurrent_search_reaches_the_same_alternate(monkeypatch):
+    """A search holding the top record must not lose the alternate another found."""
+    import asyncio
+
+    import server as srv
+
+    cas = "25895-60-7"
+    top, alternate = 20587905, 5003444
+    _seed_candidates(cas, [(top, 47), (alternate, 46)])
+    _stub_records(monkeypatch, with_ghs={alternate}, name_cid=alternate)
+    unpaused_ghs = srv.get_ghs_classification
+    first_reached_top = asyncio.Event()
+    second_finished = asyncio.Event()
+    top_requests = 0
+
+    async def _pause_first_top_request(cid, *a, **k):
+        nonlocal top_requests
+        if cid == top:
+            top_requests += 1
+            if top_requests == 1:
+                first_reached_top.set()
+                await second_finished.wait()
+        return await unpaused_ghs(cid, *a, **k)
+
+    monkeypatch.setattr(srv, "get_ghs_classification", _pause_first_top_request)
+
+    first = asyncio.create_task(srv.search_chemical(cas, None))
+    await first_reached_top.wait()
+    second = await srv.search_chemical(cas, None)
+    second_finished.set()
+
+    assert second.cid == alternate
+    assert (await first).cid == alternate
+
+
+@pytest.mark.parametrize(
+    "failing_route",
+    ["_try_cid_by_substance", "_try_cid_by_xref", "_try_cid_by_name"],
+)
+async def test_any_route_outage_raises_and_caches_nothing(monkeypatch, failing_route):
+    """A later route's answer could differ from the failed route's, so none counts."""
+    import server as srv
+
+    async def _no_match(*_a, **_k):
+        return None
+
+    async def _later_answer(*_a, **_k):
+        return 943
+
+    async def _outage(*_a, **_k):
+        raise PubChemError("HTTP 503 after retries")
+
+    for route in ("_try_cid_by_substance", "_try_cid_by_xref"):
+        monkeypatch.setattr(srv, route, _no_match)
+    monkeypatch.setattr(srv, "_try_cid_by_name", _later_answer)
+    monkeypatch.setattr(srv, failing_route, _outage)
+
+    cas = "7697-37-2"
+    srv.cid_cache.pop(cas, None)
+
+    with pytest.raises(PubChemError):
+        await srv.get_cid_from_cas(cas, http_client=None)
+
+    assert cas not in srv.cid_cache
+
+
+async def test_substance_outage_does_not_fall_back_to_a_weaker_route(monkeypatch):
+    """A weaker route's guess would be cached for a day, so it must not answer."""
+    import server as srv
+
+    calls = []
+
+    async def _substance_transient(*_a, **_k):
+        calls.append("substance")
+        raise PubChemError("HTTP 503 after retries")
+
+    async def _xref_guess(*_a, **_k):
+        calls.append("xref")
+        return 943
+
+    async def _name_guess(*_a, **_k):
+        calls.append("name")
+        return 944
+
+    monkeypatch.setattr(srv, "_try_cid_by_substance", _substance_transient)
+    monkeypatch.setattr(srv, "_try_cid_by_xref", _xref_guess)
+    monkeypatch.setattr(srv, "_try_cid_by_name", _name_guess)
+
+    cas = "7697-37-2"
+    srv.cid_cache.pop(cas, None)
+
+    with pytest.raises(PubChemError):
+        await srv.get_cid_from_cas(cas, http_client=None)
+
+    assert calls == ["substance"]
+    assert cas not in srv.cid_cache
+
+
 async def test_get_cid_stops_after_first_trusted_method_success(monkeypatch):
     """CID lookup should avoid turning one CAS lookup into a request burst."""
     import server as srv

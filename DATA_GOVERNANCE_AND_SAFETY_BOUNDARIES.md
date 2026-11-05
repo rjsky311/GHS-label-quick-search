@@ -49,6 +49,29 @@ should also be explicit curation actions: approved entries may affect public
 identity helpers, while needs-evidence or rejected entries remain admin-only
 records.
 
+### Record Resolution And The Release Audit
+
+A CAS resolves to the PubChem compound most of its substance records agree on,
+not the first record listed. If that compound has no GHS data, another record is
+used only when its formula core and stereocenter count match; otherwise the site
+shows no data and points to the SDS.
+
+Before a release that touches lookup, the dictionary, or labels, run
+`backend/scripts/audit_dictionary_resolution.py <dir>`. It runs the site's own
+search over every CAS a name can lead to, 20 to 30 minutes against real PubChem,
+and exits non-zero if a row needs a person: a record that does not list the CAS,
+a hazard report that names something else, a report name nobody has read, an
+upstream failure, or a common reagent that changed.
+
+- Wrong records go in `backend/reviewed_cas_resolutions.py`, which picks a PubChem
+  record or none and never holds a classification. Reports about another substance
+  go in its `FOREIGN_GHS_REPORTS`, and the site stops offering them.
+- Flagged rows that are right anyway go in `backend/dictionary_audit_reviewed.py`,
+  and report names that were read go in its `REVIEWED_OTHER_REPORTS`.
+
+The audit finds records and reports about the wrong substance. It cannot tell
+whether a classification is accurate, so the SDS reminder stays.
+
 ### Chinese Name Coverage
 
 Chinese chemical names are identity aids, not hazard authority. The local seed

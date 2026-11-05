@@ -1,6 +1,10 @@
 import { useTranslation } from "react-i18next";
 import { Info } from "@/components/icons";
-import { getSubstanceNoteText, getSubstanceNotes } from "@/utils/substanceNotes";
+import {
+  getSubstanceNoteHowTo,
+  getSubstanceNoteText,
+  getSubstanceNotes,
+} from "@/utils/substanceNotes";
 
 /**
  * Shows which substance the GHS data describes when the everyday name
@@ -42,6 +46,11 @@ export default function SubstanceScopeNotes({
             data-substance-note-code={note.code || undefined}
           >
             {getSubstanceNoteText(note, locale)}
+            {getSubstanceNoteHowTo(note, locale) && (
+              <span className="mt-1 block font-semibold">
+                {getSubstanceNoteHowTo(note, locale)}
+              </span>
+            )}
           </span>
         ))}
       </span>

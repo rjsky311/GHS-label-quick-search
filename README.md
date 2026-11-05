@@ -25,7 +25,7 @@ a second agent reviews and verifies each release.
 
 - Started January 2026; first prototyped on an AI app builder, then moved to a
   self-owned React + FastAPI stack.
-- About 500 backend tests and 1,550 frontend test cases, plus docs,
+- About 600 backend tests and 1,580 frontend test cases, plus docs,
   i18n-parity, bundle-budget, and print-contract checks in CI.
 - A release is accepted only when the frontend build and the backend health
   endpoint report the same full commit, the latest on `main` that changes the
