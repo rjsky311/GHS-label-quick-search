@@ -1,5 +1,46 @@
 # Project Status And Next Plan
 
+## Release checkpoint — 2026-11-05 (`3af63bc`)
+
+Runtime release for #92. Download PDF tried the share sheet first, and desktop Chrome
+reports that it can share files, so a desktop opened a share window and only downloaded
+after it was cancelled. Desktops now download directly; phones and tablets keep the
+share sheet and download if it is cancelled or unavailable. The owner asked for the fix
+and the release; release and acceptance by Claude. Label content did not change.
+
+- Release SHA: `3af63bc82e8b47831258284c34d5c3a31a634f11` (equal to `main` at release
+  time).
+- Frontend: Cloudflare Pages `ghs-label-quick-search-shadow` Direct Upload, production
+  deployment `bc2d1366-0312-4159-9e47-7528b0039887`, Node v22.23.1 and npm 11.6.2 from a
+  clean clone. All 46 servable files on the canonical domain match the verified build.
+- Backend: Railway `ghs-backend` native deploy
+  `73cd0676-e044-4185-9aa7-160b73886c60`, `railway up` from the clean clone after setting
+  `BUILD_GIT_SHA` with `--skip-deploys`. Its code is unchanged; it was deployed so both
+  domains and health report one SHA.
+- Rollback references: frontend `704d870e-09ec-4189-a993-2b42bae83f22`, backend
+  `46db2f2e-ffac-4f35-9a68-8995c19aaaeb` (SHA `eaab03c`).
+- Before merge: frontend 1,588 tests, print PDFs 42/42, backend 609 passed and 1 skipped,
+  docs and i18n checks. Production QA scripts against a local build passed: search UI,
+  print handoff 6/6, prepared solutions 9/9, batch, lab-ready batch.
+- Acceptance: both `build-info.json` and `/api/health` report the release SHA; health
+  `healthy`, PDF available; `qa:production-health` and `qa:production-pdf-canary` passed;
+  CORS allows only the canonical and Pages origins; security headers present on both
+  origins. Production returned the audit's data for all 82 common reagents (70 with
+  pictograms, 12 with no data, 0 differences, 0 upstream errors).
+- `qa:production-search-ui`, `qa:production-prepared`, `qa:production-batch-print`,
+  `qa:production-lab-ready-batch`, and `qa:production-product` passed from macOS. Manual
+  Production Print QA in product mode, run `42062116606`, passed.
+- Download path on production, with the real PDF renderer: a desktop browser that
+  reports file sharing gets a download and 0 share calls; a phone gets 1 share call with
+  the PDF and 0 downloads. The same check fails against the previous release. The share
+  function was a recording stub on both, because a headless browser cannot show the
+  sheet, so a real phone's share sheet has not been pressed. The owner's own desktop
+  Chrome reports file sharing, no coarse pointer, and no phone user agent, which selects
+  the download path; the button was not pressed there.
+- The five print-validation PDFs regenerated from this release render pixel-identical at
+  70 dpi to those from `eaab03c`, generated with no share stub.
+- Physical printing remains unverified.
+
 ## Release checkpoint — 2026-11-05 (`eaab03c`)
 
 Runtime release for #90, with the public-tree cleanup #89 and the #88 record in the
