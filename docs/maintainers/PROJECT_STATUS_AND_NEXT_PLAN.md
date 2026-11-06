@@ -1,5 +1,22 @@
 # Project Status And Next Plan
 
+## QA script fix — 2026-11-06
+
+No release: only QA scripts changed, and production stays at `3af63bc`. The known limit
+from `d5cd926`, where `ethylene-oxide-a4-primary-continuation` failed on macOS, is
+fixed. A page flip now marks the old preview document, and the check waits for the new
+document and its images before inspecting page 2. `qa:production-prepared` waited a
+fixed 300 ms, so it could read the old page and leave page 2 unchecked; it now waits the
+same way.
+
+- Against production on macOS, that case alone: the old script failed 5 of 6 runs, the
+  new one passed 6 of 6.
+- With pictograms delayed by 1.5 seconds: the old script failed 3 of 3, the new one
+  passed 3 of 3.
+- With only page 2's pictograms made to fail: the new script still reports
+  `preview-next-critical-elements-visible` for all 6 and nothing on page 1.
+- `qa:production-prepared` and `qa:production-product` passed with the new scripts.
+
 ## Release checkpoint — 2026-11-05 (`3af63bc`)
 
 Runtime release for #92. Download PDF tried the share sheet first, and desktop Chrome

@@ -2,6 +2,10 @@
 import os from "node:os";
 import path from "node:path";
 import { chromium } from "playwright-core";
+import {
+  isPreviewDocumentFresh,
+  markPreviewDocumentReplaced,
+} from "./preview-document-readiness.mjs";
 
 const DEFAULT_PRODUCTION_URL = "https://ghs.yuchelab.com/";
 const DEFAULT_REPORT_PATH = "build/production-prepared-print-report.json";
@@ -1044,8 +1048,11 @@ const runCase = async ({ browser, testCase, attempt = 1 }) => {
     let preview = await inspectPreviewFrame(page, testCase);
     if (Number(testCase.expectedMinTotalLabels || 1) > 1) {
       markStage("inspect-next-preview");
+      await page.evaluate(markPreviewDocumentReplaced);
       await page.getByTestId("preview-page-next").click();
-      await page.waitForTimeout(300);
+      await page
+        .waitForFunction(isPreviewDocumentFresh, undefined, { timeout: 20000 })
+        .catch(() => {});
       const nextPreview = await inspectPreviewFrame(page, testCase);
       preview = mergePreviewEvidence(preview, nextPreview);
     }

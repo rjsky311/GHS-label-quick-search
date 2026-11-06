@@ -2,6 +2,11 @@
 import os from "node:os";
 import path from "node:path";
 import { chromium } from "playwright-core";
+import {
+  isPreviewDocumentFresh,
+  isPreviewDocumentReady,
+  markPreviewDocumentReplaced,
+} from "./preview-document-readiness.mjs";
 
 const DEFAULT_REPORT_PATH = "build/print-qa-report.json";
 const DEFAULT_HANDOFF_REPORT_PATH = "build/production-print-handoff-report.json";
@@ -292,23 +297,9 @@ const navigateToApp = async (page, baseUrl) => {
 
 const waitForPreviewImagesReady = async (page) => {
   await page
-    .waitForFunction(
-      () => {
-        const frame = document.querySelector(
-          '[data-testid="label-fragment-preview"]',
-        );
-        const doc = frame?.contentDocument;
-        if (!doc) return false;
-        const images = Array.from(
-          doc.querySelectorAll("img.pictogram, img.qrcode-img"),
-        );
-        return images.every(
-          (image) => image.complete && image.naturalWidth > 0,
-        );
-      },
-      {},
-      { timeout: PREVIEW_IMAGE_READY_TIMEOUT_MS },
-    )
+    .waitForFunction(isPreviewDocumentReady, undefined, {
+      timeout: PREVIEW_IMAGE_READY_TIMEOUT_MS,
+    })
     .catch(() => {});
 };
 
@@ -1136,6 +1127,7 @@ const capturePreviewEvidence = async (page, testCase) => {
     const beforeSrcDoc = await previewFrame
       .getAttribute("srcdoc")
       .catch(() => "");
+    await page.evaluate(markPreviewDocumentReplaced);
     await page.getByTestId("preview-page-next").click();
     await page.waitForFunction(
       (previous) =>
@@ -1146,8 +1138,11 @@ const capturePreviewEvidence = async (page, testCase) => {
       { timeout: 10000 },
     );
     const afterSrcDoc = await previewFrame.getAttribute("srcdoc");
+    await waitForPreviewImagesReady(page);
     evidence.nextPreviewPageChanged =
-      Boolean(beforeSrcDoc) && beforeSrcDoc !== afterSrcDoc;
+      Boolean(beforeSrcDoc) &&
+      beforeSrcDoc !== afterSrcDoc &&
+      (await page.evaluate(isPreviewDocumentFresh));
     evidence.nextPreviewInspection = await inspectPreviewFrame(page, testCase);
   }
   evidence.outputChecklistText =
