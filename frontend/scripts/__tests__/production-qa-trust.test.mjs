@@ -308,6 +308,7 @@ test("automatic production QA skips only known non-runtime change sets", () => {
   assert.equal(classify("backend/server.py"), "run");
   assert.equal(classify("frontend/package.json"), "run");
   assert.equal(classify("frontend/scripts/content-security-policy.mjs"), "run");
+  assert.equal(classify("frontend/scripts/check-production-print-handoff.mjs"), "run");
   assert.equal(classify("frontend/public/runtime-guide.md"), "run");
 });
 
@@ -356,6 +357,16 @@ test("production freshness target tolerates only non-runtime commits after the d
       "frontend/package.json",
       packageJson({ build: "vite build", "test:qa-scripts": "node --test a b" }, { react: "19.0.0" }),
     );
+    commitFile("frontend/scripts/check-production-print-handoff.mjs", "// check\n");
+    commitFile("frontend/scripts/run-production-product-qa.mjs", "// run\n");
+    const qaScriptOnly = commitFile(
+      "frontend/scripts/preview-document-readiness.mjs",
+      "// helper\n",
+    );
+    const sharedScript = commitFile(
+      "frontend/scripts/content-security-policy.mjs",
+      "// shared with the build\n",
+    );
     const dependencyChange = commitFile(
       "frontend/package.json",
       packageJson({ build: "vite build", "test:qa-scripts": "node --test a b" }, { react: "19.1.0" }),
@@ -366,6 +377,8 @@ test("production freshness target tolerates only non-runtime commits after the d
     assert.equal(resolve(docsOnly, deployed), deployed);
     assert.equal(resolve(testScriptOnly, deployed), deployed);
     assert.equal(resolve(testScriptOnly, workflowOnly), workflowOnly);
+    assert.equal(resolve(qaScriptOnly, deployed), deployed);
+    assert.equal(resolve(sharedScript, deployed), sharedScript);
     assert.equal(resolve(dependencyChange, deployed), dependencyChange);
     assert.equal(resolve(runtime, deployed), runtime);
     assert.equal(resolve(runtime, workflowOnly), runtime);

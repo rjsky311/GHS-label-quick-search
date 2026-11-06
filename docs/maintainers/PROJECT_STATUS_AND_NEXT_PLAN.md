@@ -16,6 +16,11 @@ same way.
 - With only page 2's pictograms made to fail: the new script still reports
   `preview-next-critical-elements-visible` for all 6 and nothing on page 1.
 - `qa:production-prepared` and `qa:production-product` passed with the new scripts.
+- That merge made production look stale: the freshness target used the same list as
+  "should QA rerun", and changing a QA script should rerun QA but ships nothing. The
+  resolver now leaves the production QA scripts out of the freshness decision. The
+  post-merge run `42163511043` got stuck on this, waiting for a deploy that was not
+  coming.
 
 ## Release checkpoint — 2026-11-05 (`3af63bc`)
 

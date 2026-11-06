@@ -8,9 +8,10 @@
 # the deployed commit is an ancestor of the source commit and every change in
 # between is non-runtime (per classify-production-qa-change.sh), the deployed
 # commit is still fresh and is printed. A frontend/package.json change counts as
-# non-runtime only when nothing but test:* or qa:* scripts changed. In every
-# other case the source commit is printed, so a genuinely stale deployment keeps
-# failing the freshness gate.
+# non-runtime only when nothing but test:* or qa:* scripts changed. The production
+# QA scripts count too: they never ship, though changing them still reruns QA, which
+# is why the classifier alone cannot decide this. In every other case the source
+# commit is printed, so a genuinely stale deployment keeps failing the freshness gate.
 set -euo pipefail
 
 source_sha="${1:?source sha required}"
@@ -54,10 +55,24 @@ sys.exit(0 if runtime_view(sys.argv[1]) == runtime_view(sys.argv[2]) else 1)
 PY
 }
 
+is_production_qa_script() {
+  case "$1" in
+    frontend/scripts/check-production-*.mjs | \
+      frontend/scripts/run-production-*.mjs | \
+      frontend/scripts/preview-document-readiness.mjs)
+      return 0
+      ;;
+  esac
+  return 1
+}
+
 changed_files=()
 while IFS= read -r changed_file; do
   [[ -z "$changed_file" ]] && continue
   if [[ "$changed_file" == "frontend/package.json" ]] && package_json_runtime_unchanged; then
+    continue
+  fi
+  if is_production_qa_script "$changed_file"; then
     continue
   fi
   changed_files+=("$changed_file")
